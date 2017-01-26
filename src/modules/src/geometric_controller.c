@@ -1,13 +1,21 @@
-/**
- *    ||          ____  _ __
- * +------+      / __ )(_) /_______________ _____  ___
- * | 0xBC |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
- * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
- *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
+/*
  *
- * Crazyflie Firmware
+ *                    .oo .oPYo.  .oPYo. o
+ *                   .P 8 8    8  8   `8 8
+ *                  .P  8 8      o8YooP' 8
+ *                 oPooo8 8       8   `b 8
+ *                .P    8 8    8  8    8 8
+ *               .P     8 `YooP'  8    8 8oooo
+ *               ..:::::..:.....::..:::........
+ *               ::::::::::::::::::::::::::::::
+ *               ::::::::::::::::::::::::::::::
+ *               Advanced Controls Research Lab
  *
- * Copyright (C) 2011-2012 Bitcraze AB
+ * Copyright Advanced Controls Research Laboratory 2017
+ * Univesity of Illinois at Urbana-Champaign
+ * Visit us at http://naira.mechse.illinois.edu/
+ *
+ * Authored by Arun Lakshmanan and Andrew Patterson
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +29,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * attitude_pid_controller.c: Attitude controler using PID correctors
- */
+ * geometric_controller.c - Implementation of a geometric controller
+ *                 as described in https://arxiv.org/abs/1003.2005v1
+ * */
+
 #include <stdbool.h>
 
 #include "FreeRTOS.h"
