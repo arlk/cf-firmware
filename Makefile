@@ -27,8 +27,8 @@ LPS_TDOA_ENABLE   ?= 0
 
 ######### Stabilizer configuration ##########
 ##### Sets the name of the stabilizer module to use.
-ESTIMATOR          ?= complementary
-CONTROLLER         ?= pid
+ESTIMATOR          ?= kalman
+CONTROLLER         ?= geom
 POWER_DISTRIBUTION ?= stock
 SENSORS 					 ?= cf2
 
@@ -168,6 +168,7 @@ PROJ_OBJ_CF2 += platformservice.o sound_cf2.o extrx.o sysload.o
 # Stabilizer modules
 PROJ_OBJ += commander.o ext_position.o
 PROJ_OBJ += attitude_pid_controller.o sensfusion6.o stabilizer.o
+PROJ_OBJ += geometric_controller.o
 PROJ_OBJ += position_estimator_altitude.o position_controller_pid.o
 PROJ_OBJ += estimator_$(ESTIMATOR).o controller_$(CONTROLLER).o
 PROJ_OBJ += power_distribution_$(POWER_DISTRIBUTION).o
@@ -211,6 +212,7 @@ PROJ_OBJ_CF2 += exptest.o
 # Utilities
 PROJ_OBJ += filter.o cpuid.o cfassert.o  eprintf.o crc.o num.o debug.o
 PROJ_OBJ += version.o FreeRTOS-openocd.o
+PROJ_OBJ += flight_math.o
 PROJ_OBJ_CF1 += configblockflash.o
 PROJ_OBJ_CF2 += configblockeeprom.o
 

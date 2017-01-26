@@ -73,6 +73,7 @@
 
 #include "math.h"
 #include "arm_math.h"
+#include "flight_math.h"
 
 //#define KALMAN_USE_BARO_UPDATE
 //#define KALMAN_NAN_CHECK
@@ -1145,6 +1146,14 @@ static void stateEstimatorExternalizeState(state_t *state, sensorData_t *sensors
       .roll = roll*RAD_TO_DEG,
       .pitch = -pitch*RAD_TO_DEG,
       .yaw = yaw*RAD_TO_DEG
+  };
+
+  // Save rotation ZYX, adjusted for the legacy CF2 body coordinate system
+  state->attitudeRotation = (rotation_t){
+      .timestamp = tick,
+      .vals = {{R[0][0], R[0][1], R[0][2]},
+               {R[1][0], R[1][1], R[1][2]},
+               {R[2][0], R[2][1], R[2][2]}}
   };
 
   // Save quaternion, hopefully one day this could be used in a better controller.

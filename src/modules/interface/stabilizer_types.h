@@ -76,6 +76,12 @@ typedef struct quaternion_s {
   };
 } quaternion_t;
 
+/* Orientation as a rotation matrix */
+typedef struct rotation_s {
+  uint32_t timestamp;
+  float vals[3][3];
+} rotation_t;
+
 typedef struct tdoaMeasurement_s {
   point_t anchorPosition[2];
   float distanceDiff;
@@ -124,6 +130,7 @@ typedef struct sensorData_s {
 typedef struct state_s {
   attitude_t attitude;
   quaternion_t attitudeQuaternion;
+  rotation_t attitudeRotation;
   point_t position;
   velocity_t velocity;
   acc_t acc;
