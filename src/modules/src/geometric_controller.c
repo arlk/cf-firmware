@@ -44,15 +44,13 @@
 #include "param.h"
 #include "log.h"
 
-static float k_rot_xy = 1.5;
+static float k_rot_xy = 1.0;
 static float k_rot_z = 5.0;
-static float k_omg_xy = 0.23;
+static float k_omg_xy = 0.25;
 static float k_omg_z = 0.6;
 static float j_xx = 1.39e-5;
 static float j_yy = 1.39e-5;
 static float j_zz = 2.173e-5;
-
-//FIXME(arun)
 static float mom_gain = 30000;
 
 
