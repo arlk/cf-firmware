@@ -46,7 +46,7 @@
 #include "trace.h"
 #include "usec_time.h"
 
-#define PROTOCOL_VERSION 2
+#define PROTOCOL_VERSION 3
 
 #ifdef STM32F4XX
   #define P_NAME "Crazyflie 2.0"
@@ -68,8 +68,8 @@
   #define CONFIG_BLOCK_ADDRESS    (1024 * (128-1))
   #define MCU_ID_ADDRESS          0x1FFFF7E8
   #define MCU_FLASH_SIZE_ADDRESS  0x1FFFF7E0
-  #define FREERTOS_HEAP_SIZE      14000
-  #define FREERTOS_MIN_STACK_SIZE 100
+  #define FREERTOS_HEAP_SIZE      13900
+  #define FREERTOS_MIN_STACK_SIZE 80
   #define FREERTOS_MCU_CLOCK_HZ   72000000
 #endif
 
