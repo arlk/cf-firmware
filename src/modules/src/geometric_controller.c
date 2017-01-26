@@ -87,23 +87,23 @@ bool geometricControllerTest()
 
 void geometricMomentController(const rotation_t* rotation, const sensorData_t *sensors, rotation_t* rotationDes)
 {
-  arm_matrix_instance_f32 Rb = {3, 3, (float *)rotation->vals};
-  arm_matrix_instance_f32 Rd = {3, 3, (float *)rotationDes->vals};
+  arm_matrix_instance_f32 Rwb = {3, 3, (float *)rotation->vals};
+  arm_matrix_instance_f32 Rwd = {3, 3, (float *)rotationDes->vals};
 
   static float rotationDesTransp[3][3];
-  static arm_matrix_instance_f32 Rdt = {3, 3, (float *)rotationDesTransp};
+  static arm_matrix_instance_f32 Rwdt = {3, 3, (float *)rotationDesTransp};
 
   static float desOrientation[3][3];
   static arm_matrix_instance_f32 Rdb = {3, 3, (float *)desOrientation};
 
-  static float orientationErr[3][3];
-  static arm_matrix_instance_f32 eR = {3, 3, (float *)orientationErr};
-
   static float desOrientationTransp[3][3];
   static arm_matrix_instance_f32 Rdbt = {3, 3, (float *)desOrientationTransp};
 
-  mat_trans(&Rd, &Rdt);
-  mat_mult(&Rdt, &Rb, &Rdb);
+  static float orientationErr[3][3];
+  static arm_matrix_instance_f32 eR = {3, 3, (float *)orientationErr};
+
+  mat_trans(&Rwd, &Rwdt);
+  mat_mult(&Rwdt, &Rwb, &Rdb);
   mat_trans(&Rdb, &Rdbt);
   mat_sub(&Rdb, &Rdbt, &eR);
 
@@ -130,30 +130,12 @@ void geometricControllerGetActuatorOutput(int16_t* roll, int16_t* pitch, int16_t
   *yaw = yawOutput;
 }
 
-/* LOG_GROUP_START(pid_attitude) */
-/* LOG_ADD(LOG_FLOAT, roll_outP, &pidRoll.outP) */
-/* LOG_ADD(LOG_FLOAT, roll_outI, &pidRoll.outI) */
-/* LOG_ADD(LOG_FLOAT, roll_outD, &pidRoll.outD) */
-/* LOG_ADD(LOG_FLOAT, pitch_outP, &pidPitch.outP) */
-/* LOG_ADD(LOG_FLOAT, pitch_outI, &pidPitch.outI) */
-/* LOG_ADD(LOG_FLOAT, pitch_outD, &pidPitch.outD) */
-/* LOG_ADD(LOG_FLOAT, yaw_outP, &pidYaw.outP) */
-/* LOG_ADD(LOG_FLOAT, yaw_outI, &pidYaw.outI) */
-/* LOG_ADD(LOG_FLOAT, yaw_outD, &pidYaw.outD) */
-/* LOG_GROUP_STOP(pid_attitude) */
-/*  */
-/* LOG_GROUP_START(pid_rate) */
-/* LOG_ADD(LOG_FLOAT, roll_outP, &pidRollRate.outP) */
-/* LOG_ADD(LOG_FLOAT, roll_outI, &pidRollRate.outI) */
-/* LOG_ADD(LOG_FLOAT, roll_outD, &pidRollRate.outD) */
-/* LOG_ADD(LOG_FLOAT, pitch_outP, &pidPitchRate.outP) */
-/* LOG_ADD(LOG_FLOAT, pitch_outI, &pidPitchRate.outI) */
-/* LOG_ADD(LOG_FLOAT, pitch_outD, &pidPitchRate.outD) */
-/* LOG_ADD(LOG_FLOAT, yaw_outP, &pidYawRate.outP) */
-/* LOG_ADD(LOG_FLOAT, yaw_outI, &pidYawRate.outI) */
-/* LOG_ADD(LOG_FLOAT, yaw_outD, &pidYawRate.outD) */
-/* LOG_GROUP_STOP(pid_rate) */
-/*  */
+LOG_GROUP_START(geometric_ctl)
+LOG_ADD(LOG_FLOAT, roll_moment, &rollMoment)
+LOG_ADD(LOG_FLOAT, pitch_moment, &pitchMoment)
+LOG_ADD(LOG_FLOAT, yaw_moment, &yawMoment)
+LOG_GROUP_STOP(geometric_ctl)
+
 /* PARAM_GROUP_START(pid_attitude) */
 /* PARAM_ADD(PARAM_FLOAT, roll_kp, &pidRoll.kp) */
 /* PARAM_ADD(PARAM_FLOAT, roll_ki, &pidRoll.ki) */
