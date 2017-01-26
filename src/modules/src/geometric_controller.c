@@ -44,15 +44,16 @@
 #include "param.h"
 #include "log.h"
 
-// FIXME
-#define K_ROT_XY (float)1.5
-#define K_ROT_Z (float)5.0
-#define K_OMG_XY (float)0.23
-#define K_OMG_Z (float)0.6
-#define J_XX (float)1.39e-5
-#define J_YY (float)1.39e-5
-#define J_ZZ (float)2.173e-5
-#define MOM_GAIN (float)30000
+static float k_rot_xy = 1.5;
+static float k_rot_z = 5.0;
+static float k_omg_xy = 0.23;
+static float k_omg_z = 0.6;
+static float j_xx = 1.39e-5;
+static float j_yy = 1.39e-5;
+static float j_zz = 2.173e-5;
+
+//FIXME(arun)
+static float mom_gain = 30000;
 
 
 static inline int16_t saturateSignedInt16(float in)
@@ -121,16 +122,16 @@ void geometricMomentController(const rotation_t* rotation, const sensorData_t *s
   vee_map(eR.pData, errRotation);
 
 
-  rollMoment = (0.5f*(-K_ROT_XY*errRotation[0]) -K_OMG_XY*sensors->gyro.x*3.141f/180.0f)
-              + (-J_YY + J_ZZ)*sensors->gyro.y*sensors->gyro.z;
-  pitchMoment = -(0.5f*(-K_ROT_XY*errRotation[1]) -K_OMG_XY*sensors->gyro.y*3.141f/180.0f)
-              + (J_XX - J_ZZ)*sensors->gyro.x*sensors->gyro.z;
-  yawMoment = (0.5f*(-K_ROT_Z*errRotation[2]) -K_OMG_Z*sensors->gyro.z*3.141f/180.0f)
-              + (-J_XX + J_YY)*sensors->gyro.x*sensors->gyro.y;
+  rollMoment  = (-k_rot_xy*0.5f*errRotation[0] -k_omg_xy*sensors->gyro.x*DEG_TO_RAD)
+              + (-j_yy + j_zz)*sensors->gyro.y*sensors->gyro.z;
+  pitchMoment = -(-k_rot_xy*0.5f*errRotation[1] -k_omg_xy*sensors->gyro.y*DEG_TO_RAD)
+              + (j_xx - j_zz)*sensors->gyro.x*sensors->gyro.z;
+  yawMoment   = (-k_rot_z*0.5f*errRotation[2] -k_omg_z*sensors->gyro.z*DEG_TO_RAD)
+              + (-j_xx + j_yy)*sensors->gyro.x*sensors->gyro.y;
 
-  rollOutput = saturateSignedInt16(MOM_GAIN*rollMoment);
-  pitchOutput = saturateSignedInt16(MOM_GAIN*pitchMoment);
-  yawOutput = saturateSignedInt16(MOM_GAIN*yawMoment);
+  rollOutput  = saturateSignedInt16(mom_gain*rollMoment);
+  pitchOutput = saturateSignedInt16(mom_gain*pitchMoment);
+  yawOutput   = saturateSignedInt16(mom_gain*yawMoment);
 }
 
 void geometricControllerGetActuatorOutput(int16_t* roll, int16_t* pitch, int16_t* yaw)
@@ -140,34 +141,19 @@ void geometricControllerGetActuatorOutput(int16_t* roll, int16_t* pitch, int16_t
   *yaw = yawOutput;
 }
 
-LOG_GROUP_START(geometric_ctl)
+LOG_GROUP_START(geom_ctl_out)
 LOG_ADD(LOG_FLOAT, roll_moment, &rollMoment)
 LOG_ADD(LOG_FLOAT, pitch_moment, &pitchMoment)
 LOG_ADD(LOG_FLOAT, yaw_moment, &yawMoment)
-LOG_GROUP_STOP(geometric_ctl)
+LOG_GROUP_STOP(geom_ctl_out)
 
-/* PARAM_GROUP_START(pid_attitude) */
-/* PARAM_ADD(PARAM_FLOAT, roll_kp, &pidRoll.kp) */
-/* PARAM_ADD(PARAM_FLOAT, roll_ki, &pidRoll.ki) */
-/* PARAM_ADD(PARAM_FLOAT, roll_kd, &pidRoll.kd) */
-/* PARAM_ADD(PARAM_FLOAT, pitch_kp, &pidPitch.kp) */
-/* PARAM_ADD(PARAM_FLOAT, pitch_ki, &pidPitch.ki) */
-/* PARAM_ADD(PARAM_FLOAT, pitch_kd, &pidPitch.kd) */
-/* PARAM_ADD(PARAM_FLOAT, yaw_kp, &pidYaw.kp) */
-/* PARAM_ADD(PARAM_FLOAT, yaw_ki, &pidYaw.ki) */
-/* PARAM_ADD(PARAM_FLOAT, yaw_kd, &pidYaw.kd) */
-/* PARAM_GROUP_STOP(pid_attitude) */
-/*  */
-/* PARAM_GROUP_START(pid_rate) */
-/* PARAM_ADD(PARAM_FLOAT, rpRateLimit,  &rpRateLimit) */
-/* PARAM_ADD(PARAM_FLOAT, yawRateLimit, &yawRateLimit) */
-/* PARAM_ADD(PARAM_FLOAT, roll_kp, &pidRollRate.kp) */
-/* PARAM_ADD(PARAM_FLOAT, roll_ki, &pidRollRate.ki) */
-/* PARAM_ADD(PARAM_FLOAT, roll_kd, &pidRollRate.kd) */
-/* PARAM_ADD(PARAM_FLOAT, pitch_kp, &pidPitchRate.kp) */
-/* PARAM_ADD(PARAM_FLOAT, pitch_ki, &pidPitchRate.ki) */
-/* PARAM_ADD(PARAM_FLOAT, pitch_kd, &pidPitchRate.kd) */
-/* PARAM_ADD(PARAM_FLOAT, yaw_kp, &pidYawRate.kp) */
-/* PARAM_ADD(PARAM_FLOAT, yaw_ki, &pidYawRate.ki) */
-/* PARAM_ADD(PARAM_FLOAT, yaw_kd, &pidYawRate.kd) */
-/* PARAM_GROUP_STOP(pid_rate) */
+PARAM_GROUP_START(geom_ctl_gains)
+PARAM_ADD(PARAM_FLOAT, kr_xy, &k_rot_xy)
+PARAM_ADD(PARAM_FLOAT, kr_z, &k_rot_z)
+PARAM_ADD(PARAM_FLOAT, ko_xy, &k_omg_xy)
+PARAM_ADD(PARAM_FLOAT, ko_z, &k_omg_z)
+PARAM_ADD(PARAM_FLOAT, jxx, &j_xx)
+PARAM_ADD(PARAM_FLOAT, jyy, &j_yy)
+PARAM_ADD(PARAM_FLOAT, jzz, &j_zz)
+PARAM_ADD(PARAM_FLOAT, moment_gain, &mom_gain)
+PARAM_GROUP_STOP(geom_ctl_gains)
