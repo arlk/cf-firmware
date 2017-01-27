@@ -40,9 +40,9 @@
 
 #include "stabilizer_types.h"
 
-void eulerToRotationZYX(rotation_t* rotation, const attitude_t* euler);
+void eulerToRotationZYX(const attitude_t* euler, rotation_t* rotation);
 
-void quatToRotationZYX(rotation_t* rotation, const quaternion_t* q);
+void quatToRotationZYX(const quaternion_t* q, rotation_t* rotation);
 
 void vee_map(float* matrix, float* vec);
 

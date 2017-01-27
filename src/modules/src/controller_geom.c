@@ -32,9 +32,11 @@
  * controller_geom.c - Calls geometric controller functions
  * */
 
+#include "FreeRTOS.h"
 #include "stabilizer.h"
 #include "stabilizer_types.h"
 
+#include "arm_math.h"
 #include "geometric_controller.h"
 #include "flight_math.h"
 #include "sensfusion6.h"
@@ -61,86 +63,42 @@ bool stateControllerTest(void)
   return pass;
 }
 
-void updateAttitudeDesired(const state_t *state, attitude_t* attitudeDesired,
-    setpoint_t* setpoint)
-{
-  static float errRotation[3];
-  errPosition[0] = setpoint->positionDes.x - state->position.x;
-  errPosition[1] = setpoint->positionDes.y - state->position.y;
-  errPosition[2] = setpoint->positionDes.z - state->position.z;
-
-  static float errVelocity[3];
-  errVelocity[0] = setpoint->velocityDes.x - state->velocity.x;
-  errVelocity[1] = setpoint->velocityDes.y - state->velocity.y;
-  errVelocity[2] = setpoint->velocityDes.z - state->velocity.z;
-
-  static float forceMagnitude =
-    (k_pos*errPosition[0] + k_vel*errVelocity[0] + mass*stateDes->acc.x)*state->rotation.vals[0][2]
-  + (k_pos*errPosition[1] + k_vel*errVelocity[1] + mass*stateDes->acc.y)*state->rotation.vals[1][2]
-  + (k_pos*errPosition[2] + k_vel*errVelocity[2] + mass*(GRAVITY + stateDes->acc.z))*state->rotation.vals[2][2];
-
-  setpoint->rotation.vals[0][2] = (k_pos*errPosition[0] + k_vel*errVelocity[0]
-      + mass*setpoint->acc.x)*state->rotation.vals[0][2]/forceMagnitude;
-  setpoint->rotation.vals[1][2] = (k_pos*errPosition[1] + k_vel*errVelocity[1]
-      + mass*setpoint->acc.y)*state->rotation.vals[1][2]/forceMagnitude;
-  setpoint->rotation.vals[2][2] = (k_pos*errPosition[2] + k_vel*errVelocity[2]
-      + mass*(GRAVITY + setpoint->acc.z))*state->rotation.vals[2][2]/forceMagnitude;
-
-  static float xInterDesired[3];
-  xInterDesired[0] = arm_cos_f32(attitudeDesired.yaw);
-  xInterDesired[1] = arm_sin_f32(attitudeDesired.yaw);
-  xInterDesired[2] = 0;
-
-  setpoint->rotation.vals[0][1] = -setpoint->rotation.vals[2][2]*xInterDesired[1]
-    + setpoint->rotation[1][2]*xInterDesired[2];
-  setpoint->rotation.vals[1][1] =  setpoint->rotation.vals[2][2]*xInterDesired[0]
-    - setpoint->rotation[0][2]*xInterDesired[2];
-  setpoint->rotation.vals[2][1] = -setpoint->rotation.vals[1][2]*xInterDesired[0]
-    + setpoint->rotation[0][2]*xInterDesired[1];
-
-  setpoint->rotation.vals[0][0] = -setpoint->rotation.vals[2][1]*setpoint->rotation.vals[1][2]
-    + setpoint->rotation[1][1]*setpoint->rotation.vals[2][2];
-  setpoint->rotation.vals[1][0] = setpoint->rotation.vals[2][1]*setpoint->rotation.vals[0][2]
-    - setpoint->rotation[0][1]*setpoint->rotation.vals[2][2];
-  setpoint->rotation.vals[2][0] = -setpoint->rotation.vals[1][1]*setpoint->rotation.vals[0][2]
-    + setpoint->rotation[0][1]*setpoint->rotation.vals[1][2];
-}
-
 void stateController(control_t *control, setpoint_t *setpoint,
                                          const sensorData_t *sensors,
                                          const state_t *state,
                                          const uint32_t tick)
 {
   if (RATE_DO_EXECUTE(ATTITUDE_RATE, tick)) {
-    // Yaw control (default: rate)
+
+    // Yaw input (default: rate)
     if (setpoint->mode.yaw == modeVelocity) {
        attitudeDesired.yaw -= setpoint->attitudeRate.yaw*DEG_TO_RAD/500.0f;
       while (attitudeDesired.yaw > PI)
         attitudeDesired.yaw -= 2*PI;
       while (attitudeDesired.yaw < -PI)
         attitudeDesired.yaw += 2*PI;
-    } else {
+    }
+    // Yaw input (angle)
+    else {
       attitudeDesired.yaw = setpoint->attitude.yaw*DEG_TO_RAD;
     }
 
-    // Switch between manual and automatic position control
+
+    // Manual control (joystick)
     if (setpoint->mode.x == modeDisable || setpoint->mode.y == modeDisable) {
       attitudeDesired.roll = setpoint->attitude.roll*DEG_TO_RAD;
       attitudeDesired.pitch = -setpoint->attitude.pitch*DEG_TO_RAD;
       eulerToRotationZYX(&attitudeDesired, &setpoint->rotation);
-    } else if (setpoint->mode.x == modeVelocity && setpoint->mode.y == modeVelocity) {
-      updateAttitudeDesired(&state, &attitudeDesired, &setpoint);
-    }
-
-    if (setpoint->mode.z == modeDisable) {
       actuatorThrust = setpoint->thrust;
     }
-    /* } else if (setpoint->mode.z == modeAbs) { */
-    /*   geometricControllerGetActuatorOutput(&actuatorThrust); */
+    // Crane mode (joystick velocities)
+    else if (setpoint->mode.x == modeVelocity && setpoint->mode.y == modeVelocity) {
+      geometricControllerGetAttitudeDesired(state, &attitudeDesired, setpoint);
+      geometricControllerGetThrustDesired(state, setpoint);
+      geometricControllerGetThrustOutput(&actuatorThrust);
+    }
 
-    /* geometricControllerTest(&state->attitudeRotation, sensors, &setpoint->rotation); */
-
-    geometricMomentController(&state->attitudeRotation, sensors, &setpoint->rotation);
+    geometricMomentController(&state->rotation, sensors, &setpoint->rotation);
 
     geometricControllerGetActuatorOutput(&control->roll,
                                          &control->pitch,

@@ -130,7 +130,7 @@ typedef struct sensorData_s {
 typedef struct state_s {
   attitude_t attitude;
   quaternion_t attitudeQuaternion;
-  rotation_t attitudeRotation;
+  rotation_t rotation;
   point_t position;
   velocity_t velocity;
   acc_t acc;
@@ -157,6 +157,8 @@ typedef struct setpoint_s {
   float thrust;
   point_t position;
   velocity_t velocity;
+  acc_t acc;
+  rotation_t rotation;
 
   struct {
     mode_t x;

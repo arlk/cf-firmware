@@ -37,7 +37,7 @@
 #include "math.h"
 #include "arm_math.h"
 
-void eulerToRotationZYX(rotation_t* rotation, const attitude_t* euler)
+void eulerToRotationZYX(const attitude_t* euler, rotation_t* rotation)
 {
   rotation->vals[0][0] = arm_cos_f32(euler->yaw)*arm_cos_f32(euler->pitch);
   rotation->vals[0][1] = arm_cos_f32(euler->yaw)*arm_sin_f32(euler->pitch)*arm_sin_f32(euler->roll)
@@ -56,7 +56,7 @@ void eulerToRotationZYX(rotation_t* rotation, const attitude_t* euler)
   rotation->vals[2][2] = arm_cos_f32(euler->pitch)*arm_cos_f32(euler->roll);
 }
 
-void quatToRotationZYX(rotation_t* rotation, const quaternion_t* q)
+void quatToRotationZYX(const quaternion_t* q, rotation_t* rotation)
 {
   rotation->vals[0][0] = q->q0 * q->q0 + q->q1 * q->q1 - q->q2 * q->q2 - q->q3 * q->q3;
   rotation->vals[0][1] = 2 * q->q1 * q->q2 - 2 * q->q0 * q->q3;

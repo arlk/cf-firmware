@@ -30,7 +30,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * geometric_controller.h - Implementation of a geometric controller
- *                 as described in https://arxiv.org/abs/1003.2005v1
  * */
 
 #ifndef GEOMETRIC_CONTROLLER_H_
@@ -46,19 +45,23 @@
 
 #define DEG_TO_RAD (PI/180.0f)
 #define RAD_TO_DEG (180.0f/PI)
-
+#define GRAVITY 9.81f
+#define MASS 0.028f
 
 void geometricControllerInit();
 
-void attitudeControllerCorrectAttitudePID(
-       float eulerRollActual, float eulerPitchActual, float eulerYawActual,
-       float eulerRollDesired, float eulerPitchDesired, float eulerYawDesired,
-       float* rollRateDesired, float* pitchRateDesired, float* yawRateDesired);
-
 bool geometricControllerTest();
 
-void geometricMomentController(const rotation_t* rotation, const sensorData_t *sensors, rotation_t* rotationDes);
+void geometricControllerGetAttitudeDesired(const state_t* state,
+    attitude_t* attitudeDesired, setpoint_t* setpoint);
+
+void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpoint_t);
+
+void geometricMomentController(const rotation_t* rotation, const sensorData_t *sensors,
+    rotation_t* rotationDes);
 
 void geometricControllerGetActuatorOutput(int16_t* roll, int16_t* pitch, int16_t* yaw);
+
+void geometricControllerGetThrustOutput(float* thrust);
 
 #endif /* GEOMETRIC_CONTROLLER_H_ */

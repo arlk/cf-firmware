@@ -1149,7 +1149,7 @@ static void stateEstimatorExternalizeState(state_t *state, sensorData_t *sensors
   };
 
   // Save rotation ZYX, adjusted for the legacy CF2 body coordinate system
-  state->attitudeRotation = (rotation_t){
+  state->rotation = (rotation_t){
       .timestamp = tick,
       .vals = {{R[0][0], R[0][1], R[0][2]},
                {R[1][0], R[1][1], R[1][2]},
