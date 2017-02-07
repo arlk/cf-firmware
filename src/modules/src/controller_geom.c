@@ -92,7 +92,9 @@ void stateController(control_t *control, setpoint_t *setpoint,
       actuatorThrust = setpoint->thrust;
     }
     // Crane mode (joystick velocities)
-    else if (setpoint->mode.x == modeVelocity && setpoint->mode.y == modeVelocity) {
+    else if (setpoint->mode.x == modeVelocity &&
+        setpoint->mode.y == modeVelocity &&
+        setpoint->mode.z == modeVelocity) {
       geometricControllerGetAttitudeDesired(state, &attitudeDesired, setpoint);
       geometricControllerGetThrustDesired(state, setpoint);
       geometricControllerGetThrustOutput(&actuatorThrust);
