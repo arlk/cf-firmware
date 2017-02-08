@@ -49,6 +49,13 @@
 static attitude_t attitudeDesired;
 static float actuatorThrust;
 
+static float max_position_x = 1.0;
+static float max_position_y = 1.0;
+static float max_position_z = 1.0;
+static float min_position_x = -1.0;
+static float min_position_y = -1.0;
+static float min_position_z = -1.0;
+
 void stateControllerInit(void)
 {
   geometricControllerInit();
@@ -72,7 +79,7 @@ void stateController(control_t *control, setpoint_t *setpoint,
 
     // Yaw input (default: rate)
     if (setpoint->mode.yaw == modeVelocity) {
-       attitudeDesired.yaw -= setpoint->attitudeRate.yaw*DEG_TO_RAD/500.0f;
+      attitudeDesired.yaw -= setpoint->attitudeRate.yaw*DEG_TO_RAD*GEOMETRIC_UPDATE_DT;
       while (attitudeDesired.yaw > PI)
         attitudeDesired.yaw -= 2*PI;
       while (attitudeDesired.yaw < -PI)
@@ -95,11 +102,40 @@ void stateController(control_t *control, setpoint_t *setpoint,
     else if (setpoint->mode.x == modeVelocity &&
         setpoint->mode.y == modeVelocity &&
         setpoint->mode.z == modeVelocity) {
+      setpoint->position.x += setpoint->velocity.x*GEOMETRIC_UPDATE_DT;
+      setpoint->position.z += setpoint->velocity.y*GEOMETRIC_UPDATE_DT;
+      setpoint->position.y += setpoint->velocity.z*GEOMETRIC_UPDATE_DT;
+
+      if (setpoint->position.x > max_position_x) {
+        setpoint->position.x = max_position_x;
+      } else if (setpoint->position.x < min_position_x) {
+        setpoint->position.x = min_position_x;
+      }
+
+      if (setpoint->position.y > max_position_y) {
+        setpoint->position.y = max_position_y;
+      } else if (setpoint->position.y < min_position_y) {
+        setpoint->position.y = min_position_y;
+      }
+
+      if (setpoint->position.z > max_position_z) {
+        setpoint->position.z = max_position_z;
+      } else if (setpoint->position.z < min_position_z) {
+        setpoint->position.z = min_position_z;
+      }
+
       geometricControllerGetAttitudeDesired(state, &attitudeDesired, setpoint);
       geometricControllerGetThrustDesired(state, setpoint);
       geometricControllerGetThrustOutput(&actuatorThrust);
     }
-
+    // Position Set
+    else if (setpoint->mode.x == modeAbs &&
+        setpoint->mode.y == modeAbs &&
+        setpoint->mode.z == modeAbs) {
+      geometricControllerGetAttitudeDesired(state, &attitudeDesired, setpoint);
+      geometricControllerGetThrustDesired(state, setpoint);
+      geometricControllerGetThrustOutput(&actuatorThrust);
+    }
     geometricMomentController(&state->rotation, sensors, &setpoint->rotation);
 
     geometricControllerGetActuatorOutput(&control->roll,
@@ -119,8 +155,12 @@ void stateController(control_t *control, setpoint_t *setpoint,
     control->pitch = 0;
     control->yaw = 0;
 
-    // Reset the calculated YAW angle for rate control
+    // Reset the integrated values if there is no thrust input
     attitudeDesired.yaw = state->attitude.yaw*DEG_TO_RAD;
+    //FIXME arun
+    /* setpoint->position.x = state->position.x; */
+    /* setpoint->position.y = state->position.y; */
+    /* setpoint->position.z = state->position.z; */
   }
 }
 
@@ -131,3 +171,12 @@ LOG_ADD(LOG_FLOAT, roll,      &attitudeDesired.roll)
 LOG_ADD(LOG_FLOAT, pitch,     &attitudeDesired.pitch)
 LOG_ADD(LOG_FLOAT, yaw,       &attitudeDesired.yaw)
 LOG_GROUP_STOP(controller)
+
+LOG_GROUP_START(posnsat)
+LOG_ADD(LOG_FLOAT, max_x, &max_position_x)
+LOG_ADD(LOG_FLOAT, max_y, &max_position_y)
+LOG_ADD(LOG_FLOAT, max_z, &max_position_z)
+LOG_ADD(LOG_FLOAT, min_x, &min_position_x)
+LOG_ADD(LOG_FLOAT, min_y, &min_position_y)
+LOG_ADD(LOG_FLOAT, min_z, &min_position_z)
+LOG_GROUP_STOP(posnsat)

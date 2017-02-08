@@ -47,7 +47,7 @@ static float k_pos_xy = 0.85f;
 static float k_pos_z = 0.65f;
 static float k_vel_xy = 0.45f;
 static float k_vel_z = 0.25f;
-static float thr_gain = 1.0e5f;
+static float thr_gain = 60000.0f;
 
 static float k_rot_xy = 1.0f;
 static float k_rot_z = 5.0f;
@@ -127,9 +127,9 @@ void geometricControllerGetAttitudeDesired(const state_t* state,
 
   static float forceMagnitude = 0;
   forceMagnitude = arm_sqrt(
-    setpoint->rotation.vals[0][2] * setpoint->rotation.vals[0][2] +
-    setpoint->rotation.vals[1][2] * setpoint->rotation.vals[1][2] +
-    setpoint->rotation.vals[2][2] * setpoint->rotation.vals[2][2]);
+    powf(setpoint->rotation.vals[0][2], 2) +
+    powf(setpoint->rotation.vals[1][2], 2) +
+    powf(setpoint->rotation.vals[2][2], 2));
 
   setpoint->rotation.vals[0][2] = setpoint->rotation.vals[0][2]/forceMagnitude;
   setpoint->rotation.vals[1][2] = setpoint->rotation.vals[1][2]/forceMagnitude;
