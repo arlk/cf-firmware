@@ -24,6 +24,10 @@ CLOAD_ARGS        ?=
 PLATFORM					?= CF2
 LPS_TDMA_ENABLE   ?= 0
 LPS_TDOA_ENABLE   ?= 0
+VEH 							?= cf
+
+######### Vehicle configuration ##########
+include config/$(VEH)/config.mk
 
 ######### Stabilizer configuration ##########
 ##### Sets the name of the stabilizer module to use.
