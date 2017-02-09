@@ -170,13 +170,13 @@ void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk)
   if (craneMode) {
     setpoint->mode.x = modeVelocity;
     setpoint->mode.y = modeVelocity;
-    setpoint->mode.z = modeVelocity;
+    setpoint->mode.z = modeAbs;
     setpoint->mode.roll = modeDisable;
     setpoint->mode.pitch = modeDisable;
 
     setpoint->velocity.x = values->pitch;
     setpoint->velocity.y = values->roll;
-    setpoint->velocity.z = ((float) rawThrust - 32767.f) / 32767.f;
+    setpoint->position.z = values->thrust/1000.0f;
     setpoint->attitude.roll  = 0;
     setpoint->attitude.pitch = 0;
   } else if (posHoldMode) {
