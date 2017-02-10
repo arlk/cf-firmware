@@ -46,4 +46,6 @@ void quatToRotationZYX(const quaternion_t* q, rotation_t* rotation);
 
 void vee_map(float* matrix, float* vec);
 
+float invSqrt(float x);
+
 #endif // FLIGHT_MATH_H_

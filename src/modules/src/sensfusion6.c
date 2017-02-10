@@ -26,6 +26,7 @@
 #include <math.h>
 
 #include "sensfusion6.h"
+#include "flight_math.h"
 #include "log.h"
 #include "param.h"
 
@@ -69,9 +70,6 @@ static bool isCalibrated = false;
 static void sensfusion6UpdateQImpl(float gx, float gy, float gz, float ax, float ay, float az, float dt);
 static float sensfusion6GetAccZ(const float ax, const float ay, const float az);
 static void estimatedGravityDirection(float* gx, float* gy, float* gz);
-
-// TODO: Make math util file
-static float invSqrt(float x);
 
 void sensfusion6Init()
 {
@@ -277,20 +275,6 @@ float sensfusion6GetInvThrustCompensationForTilt()
   // Return the z component of the estimated gravity direction
   // (0, 0, 1) dot G
   return gravZ;
-}
-
-//---------------------------------------------------------------------------------------------------
-// Fast inverse square-root
-// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
-float invSqrt(float x)
-{
-  float halfx = 0.5f * x;
-  float y = x;
-  long i = *(long*)&y;
-  i = 0x5f3759df - (i>>1);
-  y = *(float*)&i;
-  y = y * (1.5f - (halfx * y * y));
-  return y;
 }
 
 static float sensfusion6GetAccZ(const float ax, const float ay, const float az)

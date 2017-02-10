@@ -125,15 +125,15 @@ void geometricControllerGetAttitudeDesired(const state_t* state,
   setpoint->rotation.vals[2][2] = k_pos_z*errPosition[2] + k_vel_z*errVelocity[2]
       + MASS*(GRAVITY + setpoint->acc.z);
 
-  static float forceMagnitude = 0;
-  forceMagnitude = arm_sqrt(
+  static float invForceMagnitude = 0;
+  invForceMagnitude = invSqrt(
     powf(setpoint->rotation.vals[0][2], 2) +
     powf(setpoint->rotation.vals[1][2], 2) +
     powf(setpoint->rotation.vals[2][2], 2));
 
-  setpoint->rotation.vals[0][2] = setpoint->rotation.vals[0][2]/forceMagnitude;
-  setpoint->rotation.vals[1][2] = setpoint->rotation.vals[1][2]/forceMagnitude;
-  setpoint->rotation.vals[2][2] = setpoint->rotation.vals[2][2]/forceMagnitude;
+  setpoint->rotation.vals[0][2] = setpoint->rotation.vals[0][2]*invForceMagnitude;
+  setpoint->rotation.vals[1][2] = setpoint->rotation.vals[1][2]*invForceMagnitude;
+  setpoint->rotation.vals[2][2] = setpoint->rotation.vals[2][2]*invForceMagnitude;
 
   static float xInterDesired[3];
   xInterDesired[0] = arm_cos_f32(attitudeDesired->yaw);
