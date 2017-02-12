@@ -11,7 +11,7 @@ CFLAGS += $(EXTRA_CFLAGS)
 
 ######### JTAG and environment configuration ##########
 OPENOCD           ?= openocd
-OPENOCD_INTERFACE ?= interface/stlink-v2.cfg
+OPENOCD_INTERFACE ?= interface/stlink-v2-1.cfg
 OPENOCD_CMDS      ?=
 CROSS_COMPILE     ?= arm-none-eabi-
 PYTHON2           ?= python2
@@ -40,11 +40,11 @@ SENSORS 					 ?= cf2
 FATFS_DISKIO_TESTS  ?= 0	# Set to 1 to enable FatFS diskio function tests. Erases card.
 
 ifeq ($(PLATFORM), CF1)
-OPENOCD_TARGET    ?= target/stm32f1x_stlink.cfg
+OPENOCD_TARGET    ?= target/stm32f1x.cfg
 USE_FPU            = 0
 endif
 ifeq ($(PLATFORM), CF2)
-OPENOCD_TARGET    ?= target/stm32f4x_stlink.cfg
+OPENOCD_TARGET    ?= target/stm32f4x.cfg
 USE_FPU           ?= 1
 endif
 
@@ -243,6 +243,7 @@ LD = $(CROSS_COMPILE)gcc
 SIZE = $(CROSS_COMPILE)size
 OBJCOPY = $(CROSS_COMPILE)objcopy
 GDB = $(CROSS_COMPILE)gdb
+CGDB = cgdb -d $(GDB)
 
 INCLUDES  = -I$(FREERTOS)/include -I$(PORT) -Isrc
 INCLUDES += -Isrc/config -Isrc/hal/interface -Isrc/modules/interface
@@ -411,6 +412,9 @@ trace:
 
 gdb: $(PROG).elf
 	$(GDB) -ex "target remote localhost:3333" -ex "monitor reset halt" $^
+
+cgdb: $(PROG).elf
+	$(CGDB) -ex "target remote localhost:3333" -ex "monitor reset halt" $^
 
 erase:
 	$(OPENOCD) -d2 -f $(OPENOCD_INTERFACE) -f $(OPENOCD_TARGET) -c init -c targets -c "halt" -c "stm32f4x mass_erase 0" -c shutdown
