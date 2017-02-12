@@ -158,6 +158,13 @@ halt       : Halt the target using OpenOCD
 reset      : Reset the target using OpenOCD
 openocd    : Launch OpenOCD
 ```
+# Debugging Workaround
+
+``` bash
+make clean && make all CLOAD=0 DEBUG=1 && make flash
+make openocd # in a seperate terminal
+make gdb
+```
 
 # Unit testing
 

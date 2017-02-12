@@ -47,6 +47,7 @@ static float k_pos_xy = 0.85f;
 static float k_pos_z = 0.65f;
 static float k_vel_xy = 0.45f;
 static float k_vel_z = 0.25f;
+static float mass = 0.028f;
 static float thr_gain = 60000.0f;
 
 static float k_rot_xy = 1.0f;
@@ -119,11 +120,11 @@ void geometricControllerGetAttitudeDesired(const state_t* state,
   errVelocity[2] = setpoint->velocity.z - state->velocity.z;
 
   setpoint->rotation.vals[0][2] = k_pos_xy*errPosition[0] + k_vel_xy*errVelocity[0]
-      + MASS*setpoint->acc.x;
+      + mass*setpoint->acc.x;
   setpoint->rotation.vals[1][2] = k_pos_xy*errPosition[1] + k_vel_xy*errVelocity[1]
-      + MASS*setpoint->acc.y;
+      + mass*setpoint->acc.y;
   setpoint->rotation.vals[2][2] = k_pos_z*errPosition[2] + k_vel_z*errVelocity[2]
-      + MASS*(GRAVITY + setpoint->acc.z);
+      + mass*(GRAVITY + setpoint->acc.z);
 
   static float invForceMagnitude = 0;
   invForceMagnitude = invSqrt(
@@ -158,11 +159,11 @@ void geometricControllerGetAttitudeDesired(const state_t* state,
 void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpoint)
 {
   thrustForce = (k_pos_xy*errPosition[0] + k_vel_xy*errVelocity[0]
-                + MASS*setpoint->acc.x)*state->rotation.vals[0][2]
+                + mass*setpoint->acc.x)*state->rotation.vals[0][2]
          + (k_pos_xy*errPosition[1] + k_vel_xy*errVelocity[1]
-                + MASS*setpoint->acc.y)*state->rotation.vals[1][2]
+                + mass*setpoint->acc.y)*state->rotation.vals[1][2]
          + (k_pos_z*errPosition[2] + k_vel_z*errVelocity[2]
-                + MASS*(GRAVITY + setpoint->acc.z))*state->rotation.vals[2][2];
+                + mass*(GRAVITY + setpoint->acc.z))*state->rotation.vals[2][2];
 
   thrustOutput = thr_gain*thrustForce;
 }
@@ -242,4 +243,5 @@ PARAM_ADD(PARAM_FLOAT, kp_z, &k_pos_z)
 PARAM_ADD(PARAM_FLOAT, kv_xy, &k_vel_xy)
 PARAM_ADD(PARAM_FLOAT, kv_z, &k_vel_z)
 PARAM_ADD(PARAM_FLOAT, thrust_gain, &thr_gain)
+PARAM_ADD(PARAM_FLOAT, mass, &mass)
 PARAM_GROUP_STOP(geomThrust)

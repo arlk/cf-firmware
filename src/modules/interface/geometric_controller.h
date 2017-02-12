@@ -46,7 +46,6 @@
 #define DEG_TO_RAD (PI/180.0f)
 #define RAD_TO_DEG (180.0f/PI)
 #define GRAVITY 9.81f
-#define MASS 0.028f
 
 void geometricControllerInit();
 
