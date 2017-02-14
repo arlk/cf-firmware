@@ -12,7 +12,7 @@
  *               Advanced Controls Research Lab
  *
  * Copyright Advanced Controls Research Laboratory 2017
- * Univesity of Illinois at Urbana-Champaign
+ * University of Illinois at Urbana-Champaign
  * Visit us at http://naira.mechse.illinois.edu/
  *
  * Authored by Arun Lakshmanan and Andrew Patterson
@@ -29,40 +29,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * geometric_controller.h - Implementation of a geometric controller
+ * geometric_controller.c - Implementation of a geometric controller
  * */
 
-#ifndef GEOMETRIC_CONTROLLER_H_
-#define GEOMETRIC_CONTROLLER_H_
-
 #include <stdbool.h>
-#include <stdint.h>
+
+#include "FreeRTOS.h"
 
 #include "arm_math.h"
-#include "commander.h"
-#include "stabilizer.h"
-#include "stabilizer_types.h"
+#include "flight_math.h"
+#include "geometric_controller.h"
+#include "param.h"
+#include "log.h"
 
-#define DEG_TO_RAD (PI/180.0f)
-#define RAD_TO_DEG (180.0f/PI)
-#define GRAVITY 9.81f
+void trajectoryInit(const uint32_t tick);
 
-#define GEOMETRIC_UPDATE_DT  (float)(1.0f/ATTITUDE_RATE)
-
-void geometricControllerInit();
-
-bool geometricControllerTest();
-
-void geometricControllerGetAttitudeDesired(const state_t* state,
-    attitude_t* attitudeDesired, setpoint_t* setpoint);
-
-void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpoint);
-
-void geometricMomentController(const rotation_t* rotation, const sensorData_t *sensors,
-    rotation_t* rotationDes);
-
-void geometricControllerGetActuatorOutput(int16_t* roll, int16_t* pitch, int16_t* yaw);
-
-void geometricControllerGetThrustOutput(float* thrust);
-
-#endif /* GEOMETRIC_CONTROLLER_H_ */
+void updateTrajectory(attitude_t* attitudeDesired, setpoint_t* setpoint, const uint32_t tick);

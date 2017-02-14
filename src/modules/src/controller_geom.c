@@ -38,16 +38,17 @@
 
 #include "arm_math.h"
 #include "geometric_controller.h"
+#include "simple_trajectories.h"
 #include "flight_math.h"
 #include "sensfusion6.h"
 
 #include "log.h"
 #include "param.h"
 
-#define GEOMETRIC_UPDATE_DT  (float)(1.0f/ATTITUDE_RATE)
-
 static attitude_t attitudeDesired;
 static float actuatorThrust;
+
+static bool circMode = false;
 
 void stateControllerInit(void)
 {
@@ -85,7 +86,15 @@ void stateController(control_t *control, setpoint_t *setpoint,
 
 
     // Manual control (joystick)
-    if (setpoint->mode.x == modeDisable || setpoint->mode.y == modeDisable) {
+    if (circMode)
+    {
+      trajectoryInit(tick);
+      updateTrajectory(&attitudeDesired, setpoint, tick);
+      geometricControllerGetAttitudeDesired(state, &attitudeDesired, setpoint);
+      geometricControllerGetThrustDesired(state, setpoint);
+      geometricControllerGetThrustOutput(&actuatorThrust);
+    }
+    else if (setpoint->mode.x == modeDisable || setpoint->mode.y == modeDisable) {
       attitudeDesired.roll = setpoint->attitude.roll*DEG_TO_RAD;
       attitudeDesired.pitch = -setpoint->attitude.pitch*DEG_TO_RAD;
       eulerToRotationZYX(&attitudeDesired, &setpoint->rotation);
@@ -140,3 +149,7 @@ LOG_ADD(LOG_FLOAT, roll,      &attitudeDesired.roll)
 LOG_ADD(LOG_FLOAT, pitch,     &attitudeDesired.pitch)
 LOG_ADD(LOG_FLOAT, yaw,       &attitudeDesired.yaw)
 LOG_GROUP_STOP(controller)
+
+PARAM_GROUP_START(trajmode)
+PARAM_ADD(PARAM_UINT8, circMode, &circMode)
+PARAM_GROUP_STOP(trajmode)

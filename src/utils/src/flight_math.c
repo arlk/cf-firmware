@@ -33,7 +33,7 @@
  * */
 
 #include "flight_math.h"
-
+#include "num.h"
 #include "math.h"
 #include "arm_math.h"
 
