@@ -76,66 +76,18 @@ static bool carefreeResetFront;             // Reset what is front in carefree m
 
 static bool thrustLocked = true;
 static bool altHoldMode = false;
-static bool craneMode = false;
+static bool velMode = false;
 static bool posHoldMode = false;
 static bool posSetMode = false;
 
-/**
- * Rotate Yaw so that the Crazyflie will change what is considered front.
- *
- * @param yawRad Amount of radians to rotate yaw.
- */
-static void rotateYaw(setpoint_t *setpoint, float yawRad)
-{
-  float cosy = cosf(yawRad);
-  float siny = sinf(yawRad);
-  float originalRoll = setpoint->attitude.roll;
-  float originalPitch = setpoint->attitude.pitch;
+static void yawFromDesiredYawRate(float yawRate) {
+  setpoint->attitude.yaw -= yawRate*GEOMETRIC_UPDATE_DT;
 
-  setpoint->attitude.roll = originalRoll * cosy - originalPitch * siny;
-  setpoint->attitude.pitch = originalPitch * cosy + originalRoll * siny;
+  while (setpoint->attitude.yaw > PI)
+    setpoint->attitude.yaw -= 2*PI;
+  while (setpoint->attitude.yaw < -PI)
+    setpoint->attitude.yaw += 2*PI;
 }
-
-/**
- * Update Yaw according to current setting
- */
-#ifdef PLATFORM_CF1
-static void yawModeUpdate(setpoint_t *setpoint)
-{
-  switch (yawMode)
-  {
-    case CAREFREE:
-      // FIXME: Add frame of reference to setpoint
-      ASSERT(false);
-      break;
-    case PLUSMODE:
-      // Default in plus mode. Do nothing
-      break;
-    case XMODE: // Fall through
-    default:
-      rotateYaw(setpoint, -45 * M_PI / 180);
-      break;
-  }
-}
-#else
-static void yawModeUpdate(setpoint_t *setpoint)
-{
-  switch (yawMode)
-  {
-    case CAREFREE:
-      // TODO: Add frame of reference to setpoint
-      ASSERT(false);
-      break;
-    case PLUSMODE:
-      rotateYaw(setpoint, 45 * M_PI / 180);
-      break;
-    case XMODE: // Fall through
-    default:
-      // Default in x-mode. Do nothing
-      break;
-  }
-}
-#endif
 
 void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk)
 {
@@ -157,100 +109,29 @@ void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk)
     setpoint->thrust = min(rawThrust, MAX_THRUST);
   }
 
-  if (altHoldMode) {
-    setpoint->thrust = 0;
-    setpoint->mode.z = modeVelocity;
+  switch (setpoint->mode) {
+    case 1:
+      /* Velocity Mode */
+      setpoint->velocity.x = values->pitch;
+      setpoint->velocity.y = values->roll;
+      setpoint->position.z = values->thrust/1000.0f;
+      yawFromDesiredYawRate(values->yaw);
+      break;
 
-    setpoint->velocity.z = ((float) rawThrust - 32767.f) / 32767.f;
-  } else {
-    setpoint->mode.z = modeDisable;
-  }
+    case 2:
+      /* Position Mode */
+      setpoint->position.x = -values->pitch;
+      setpoint->position.y = values->roll;
+      setpoint->position.z = values->thrust/1000.0f;
+      setpoint->attitude.yaw = values->yaw;
+      break;
 
-  // roll/pitch
-  if (craneMode) {
-    setpoint->mode.x = modeVelocity;
-    setpoint->mode.y = modeVelocity;
-    setpoint->mode.z = modeAbs;
-    setpoint->mode.roll = modeDisable;
-    setpoint->mode.pitch = modeDisable;
-
-    setpoint->velocity.x = values->pitch;
-    setpoint->velocity.y = values->roll;
-    setpoint->position.z = values->thrust/1000.0f;
-    setpoint->attitude.roll  = 0;
-    setpoint->attitude.pitch = 0;
-  } else if (posHoldMode) {
-    setpoint->mode.x = modeVelocity;
-    setpoint->mode.y = modeVelocity;
-    setpoint->mode.roll = modeDisable;
-    setpoint->mode.pitch = modeDisable;
-
-    setpoint->velocity.x = values->pitch/30.0f;
-    setpoint->velocity.y = values->roll/30.0f;
-    setpoint->attitude.roll  = 0;
-    setpoint->attitude.pitch = 0;
-  } else if (posSetMode && values->thrust != 0) {
-    setpoint->mode.x = modeAbs;
-    setpoint->mode.y = modeAbs;
-    setpoint->mode.z = modeAbs;
-    setpoint->mode.roll = modeDisable;
-    setpoint->mode.pitch = modeDisable;
-    setpoint->mode.yaw = modeAbs;
-
-    setpoint->position.x = -values->pitch;
-    setpoint->position.y = values->roll;
-    setpoint->position.z = values->thrust/1000.0f;
-
-    setpoint->attitude.roll  = 0;
-    setpoint->attitude.pitch = 0;
-    setpoint->attitude.yaw = values->yaw;
-    setpoint->thrust = 0;
-  } else {
-    setpoint->mode.x = modeDisable;
-    setpoint->mode.y = modeDisable;
-
-    if (stabilizationModeRoll == RATE) {
-      setpoint->mode.roll = modeVelocity;
-      setpoint->attitudeRate.roll = values->roll;
-      setpoint->attitude.roll = 0;
-    } else {
-      setpoint->mode.roll = modeAbs;
-      setpoint->attitudeRate.roll = 0;
+    default:
+      /* Angle Mode */
       setpoint->attitude.roll = values->roll;
-    }
-
-    if (stabilizationModePitch == RATE) {
-      setpoint->mode.pitch = modeVelocity;
-      setpoint->attitudeRate.pitch = values->pitch;
-      setpoint->attitude.pitch = 0;
-    } else {
-      setpoint->mode.pitch = modeAbs;
-      setpoint->attitudeRate.pitch = 0;
       setpoint->attitude.pitch = values->pitch;
-    }
-
-    setpoint->velocity.x = 0;
-    setpoint->velocity.y = 0;
-  }
-
-  // Yaw
-  if (!posSetMode) {
-    setpoint->attitudeRate.yaw  = values->yaw;
-    yawModeUpdate(setpoint);
-
-    setpoint->mode.yaw = modeVelocity;
+      setpoint->thrust = values->thrust;
+      yawFromDesiredYawRate(values->yaw);
   }
 }
 
-// Params for flight modes
-PARAM_GROUP_START(flightmode)
-PARAM_ADD(PARAM_UINT8, althold, &altHoldMode)
-PARAM_ADD(PARAM_UINT8, craneMode, &craneMode)
-PARAM_ADD(PARAM_UINT8, poshold, &posHoldMode)
-PARAM_ADD(PARAM_UINT8, posSet, &posSetMode)
-PARAM_ADD(PARAM_UINT8, yawMode, &yawMode)
-PARAM_ADD(PARAM_UINT8, yawRst, &carefreeResetFront)
-PARAM_ADD(PARAM_UINT8, stabModeRoll, &stabilizationModeRoll)
-PARAM_ADD(PARAM_UINT8, stabModePitch, &stabilizationModePitch)
-PARAM_ADD(PARAM_UINT8, stabModeYaw, &stabilizationModeYaw)
-PARAM_GROUP_STOP(flightmode)

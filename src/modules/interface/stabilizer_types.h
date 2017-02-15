@@ -144,9 +144,10 @@ typedef struct control_s {
 } control_t;
 
 typedef enum mode_e {
-  modeDisable = 0,
-  modeAbs,
-  modeVelocity
+  angleMode = 0,
+  velMode,
+  posMode,
+  circMode
 } mode_t;
 
 typedef struct setpoint_s {
@@ -159,15 +160,7 @@ typedef struct setpoint_s {
   velocity_t velocity;
   acc_t acc;
   rotation_t rotation;
-
-  struct {
-    mode_t x;
-    mode_t y;
-    mode_t z;
-    mode_t roll;
-    mode_t pitch;
-    mode_t yaw;
-  } mode;
+  mode_t mode;
 } setpoint_t;
 
 /** Estimate of position */

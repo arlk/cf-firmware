@@ -71,19 +71,30 @@ void stateController(control_t *control, setpoint_t *setpoint,
 {
   if (RATE_DO_EXECUTE(ATTITUDE_RATE, tick)) {
 
-    // Yaw input (default: rate)
-    if (setpoint->mode.yaw == modeVelocity) {
-      attitudeDesired.yaw -= setpoint->attitudeRate.yaw*DEG_TO_RAD*GEOMETRIC_UPDATE_DT;
-      while (attitudeDesired.yaw > PI)
-        attitudeDesired.yaw -= 2*PI;
-      while (attitudeDesired.yaw < -PI)
-        attitudeDesired.yaw += 2*PI;
-    }
-    // Yaw input (angle)
-    else {
-      attitudeDesired.yaw = setpoint->attitude.yaw*DEG_TO_RAD;
-    }
+    switch (setpoint->mode) {
+      case 1:
+        /* Velocity Mode */
+        setpoint->velocity.x = values->pitch;
+        setpoint->velocity.y = values->roll;
+        setpoint->position.z = values->thrust/1000.0f;
+        setpoint->attitudeRate.yaw = values->yaw;
+        break;
 
+      case 2:
+        /* Position Mode */
+        setpoint->position.x = -values->pitch;
+        setpoint->position.y = values->roll;
+        setpoint->position.z = values->thrust/1000.0f;
+        setpoint->attitude.yaw = values->yaw;
+        break;
+
+      default:
+        /* Angle Mode */
+        setpoint->attitude.roll = values->roll;
+        setpoint->attitude.pitch = values->pitch;
+        setpoint->attitudeRate.yaw = values->yaw;
+        setpoint->thrust = values->thrust;
+    }
 
     // Manual control (joystick)
     if (circMode)
