@@ -47,7 +47,8 @@ static float circFreq = 0.2f;
 static float circAlt = 2.0f;
 
 typedef enum traj_e {
-  circTraj = 0
+  noneTraj = 0,
+  circTraj
 } traj_t;
 
 static traj_t traj = 0;
