@@ -108,8 +108,62 @@ bool geometricControllerTest()
   return isInit;
 }
 
+void geometricControllerGetOmegaDesired(setpoint_t* setpoint)
+{
+  static float desThrust[3];
+  desThrust[0] = setpoint->acc.x;
+  desThrust[1] = setpoint->acc.y;
+  desThrust[2] = setpoint->acc.z + GRAVITY;
+
+  static float invForceMagnitude = 0;
+  invForceMagnitude = invSqrt(
+    powf(desThrust[0], 2) +
+    powf(desThrust[1], 2) +
+    powf(desThrust[2], 2));
+
+  static float z_b[3];
+  z_b[0] = desThrust[0]*invForceMagnitude;
+  z_b[1] = desThrust[1]*invForceMagnitude;
+  z_b[2] = desThrust[2]*invForceMagnitude;
+
+  static float x_w[3];
+  x_w[0] = arm_cos_f32(setpoint->attitude.yaw);
+  x_w[1] = arm_sin_f32(setpoint->attitude.yaw);
+  x_w[2] = 0;
+
+  static float y_b[3];
+  y_b[0] = -z_b[2]*x_w[1] + z_b[1]*x_w[2];
+  y_b[1] =  z_b[2]*x_w[0] - z_b[0]*x_w[2];
+  y_b[2] = -z_b[1]*x_w[0] + z_b[0]*x_w[1];
+
+  static float x_b[3];
+  x_b[0] = -y_b[2]*z_b[1] + y_b[1]*z_b[2];
+  x_b[1] =  y_b[2]*z_b[0] - y_b[0]*z_b[2];
+  x_b[2] = -y_b[1]*z_b[0] + y_b[0]*z_b[1];
+
+  static float forceDot;
+  forceDot = z_b[0]*setpoint->jerk.x
+        + z_b[1]*setpoint->jerk.y
+        + z_b[2]*setpoint->jerk.z;
+
+  static float h_w[3];
+  h_w[0] = (setpoint->jerk.x - forceDot*z_b[0])*invForceMagnitude;
+  h_w[1] = (setpoint->jerk.y - forceDot*z_b[1])*invForceMagnitude;
+  h_w[2] = (setpoint->jerk.z - forceDot*z_b[2])*invForceMagnitude;
+
+  setpoint->attitudeRate.roll = -h_w[0]*y_b[0]
+        - h_w[1]*y_b[1]
+        - h_w[2]*y_b[2];
+
+  setpoint->attitudeRate.pitch = h_w[0]*x_b[0]
+        + h_w[1]*x_b[1]
+        + h_w[2]*x_b[2];
+
+  setpoint->attitudeRate.yaw = setpoint->attitudeRate.yaw*z_b[2];
+}
+
 void geometricControllerGetAttitudeDesired(const state_t* state,
-    attitude_t* attitudeDesired, setpoint_t* setpoint)
+    setpoint_t* setpoint)
 {
   errPosition[0] = setpoint->position.x - state->position.x;
   errPosition[1] = setpoint->position.y - state->position.y;
@@ -137,8 +191,8 @@ void geometricControllerGetAttitudeDesired(const state_t* state,
   setpoint->rotation.vals[2][2] = setpoint->rotation.vals[2][2]*invForceMagnitude;
 
   static float xInterDesired[3];
-  xInterDesired[0] = arm_cos_f32(attitudeDesired->yaw);
-  xInterDesired[1] = arm_sin_f32(attitudeDesired->yaw);
+  xInterDesired[0] = arm_cos_f32(setpoint->attitude.yaw);
+  xInterDesired[1] = arm_sin_f32(setpoint->attitude.yaw);
   xInterDesired[2] = 0;
 
   setpoint->rotation.vals[0][1] = -setpoint->rotation.vals[2][2]*xInterDesired[1]
@@ -169,10 +223,10 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
 }
 
 void geometricMomentController(const rotation_t* rotation,
-    const sensorData_t *sensors, rotation_t* rotationDes)
+    const sensorData_t *sensors, setpoint_t* setpoint)
 {
   arm_matrix_instance_f32 Rwb = {3, 3, (float *)rotation->vals};
-  arm_matrix_instance_f32 Rwd = {3, 3, (float *)rotationDes->vals};
+  arm_matrix_instance_f32 Rwd = {3, 3, (float *)setpoint->rotation.vals};
 
   static float rotationDesTransp[3][3];
   static arm_matrix_instance_f32 Rwdt = {3, 3, (float *)rotationDesTransp};
@@ -194,12 +248,25 @@ void geometricMomentController(const rotation_t* rotation,
   static float errRotation[3];
   vee_map(eR.pData, errRotation);
 
+  static float errOmega[3];
+  errOmega[0] = sensors->gyro.x*DEG_TO_RAD
+    - desOrientationTransp[0][0]*setpoint->attitudeRate.roll
+    - desOrientationTransp[0][1]*setpoint->attitudeRate.pitch
+    - desOrientationTransp[0][2]*setpoint->attitudeRate.yaw;
+  errOmega[1] = sensors->gyro.y*DEG_TO_RAD
+    - desOrientationTransp[1][0]*setpoint->attitudeRate.roll
+    - desOrientationTransp[1][1]*setpoint->attitudeRate.pitch
+    - desOrientationTransp[1][2]*setpoint->attitudeRate.yaw;
+  errOmega[2] = sensors->gyro.z*DEG_TO_RAD
+    - desOrientationTransp[2][0]*setpoint->attitudeRate.roll
+    - desOrientationTransp[2][1]*setpoint->attitudeRate.pitch
+    - desOrientationTransp[2][2]*setpoint->attitudeRate.yaw;
 
-  rollMoment  = (-k_rot_xy*0.5f*errRotation[0] -k_omg_xy*sensors->gyro.x*DEG_TO_RAD)
+  rollMoment  = (-k_rot_xy*0.5f*errRotation[0] -k_omg_xy*errOmega[0])
               + (-j_yy + j_zz)*sensors->gyro.y*sensors->gyro.z;
-  pitchMoment = -(-k_rot_xy*0.5f*errRotation[1] -k_omg_xy*sensors->gyro.y*DEG_TO_RAD)
+  pitchMoment = -(-k_rot_xy*0.5f*errRotation[1] -k_omg_xy*errOmega[1])
               + (j_xx - j_zz)*sensors->gyro.x*sensors->gyro.z;
-  yawMoment   = (-k_rot_z*0.5f*errRotation[2] -k_omg_z*sensors->gyro.z*DEG_TO_RAD)
+  yawMoment   = (-k_rot_z*0.5f*errRotation[2] -k_omg_z*errOmega[2])
               + (-j_xx + j_yy)*sensors->gyro.x*sensors->gyro.y;
 
   rollOutput  = saturateSignedInt16(mom_gain*rollMoment);

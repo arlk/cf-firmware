@@ -48,46 +48,7 @@ struct CommanderCrtpLegacyValues
   uint16_t thrust;
 } __attribute__((packed));
 
-/**
- * Stabilization modes for Roll, Pitch, Yaw.
- */
-typedef enum
-{
-  RATE    = 0,
-  ANGLE   = 1,
-} RPYType;
-
-/**
- * Yaw flight Modes
- */
-typedef enum
-{
-  CAREFREE  = 0, // Yaw is locked to world coordinates thus heading stays the same when yaw rotates
-  PLUSMODE  = 1, // Plus-mode. Motor M1 is defined as front
-  XMODE     = 2, // X-mode. M1 & M4 are defined as front
-} YawModeType;
-
-static RPYType stabilizationModeRoll  = ANGLE; // Current stabilization type of roll (rate or angle)
-static RPYType stabilizationModePitch = ANGLE; // Current stabilization type of pitch (rate or angle)
-static RPYType stabilizationModeYaw   = RATE;  // Current stabilization type of yaw (rate or angle)
-
-static YawModeType yawMode = DEFAULT_YAW_MODE; // Yaw mode configuration
-static bool carefreeResetFront;             // Reset what is front in carefree mode
-
 static bool thrustLocked = true;
-static bool altHoldMode = false;
-static bool velMode = false;
-static bool posHoldMode = false;
-static bool posSetMode = false;
-
-static void yawFromDesiredYawRate(float yawRate) {
-  setpoint->attitude.yaw -= yawRate*GEOMETRIC_UPDATE_DT;
-
-  while (setpoint->attitude.yaw > PI)
-    setpoint->attitude.yaw -= 2*PI;
-  while (setpoint->attitude.yaw < -PI)
-    setpoint->attitude.yaw += 2*PI;
-}
 
 void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk)
 {
@@ -110,28 +71,40 @@ void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk)
   }
 
   switch (setpoint->mode) {
-    case 1:
+    case velMode:
       /* Velocity Mode */
-      setpoint->velocity.x = values->pitch;
+      setpoint->velocity.x = -values->pitch;
       setpoint->velocity.y = values->roll;
       setpoint->position.z = values->thrust/1000.0f;
-      yawFromDesiredYawRate(values->yaw);
+      setpoint->attitudeRate.yaw = values->yaw;
       break;
 
-    case 2:
+    case posMode:
       /* Position Mode */
       setpoint->position.x = -values->pitch;
       setpoint->position.y = values->roll;
       setpoint->position.z = values->thrust/1000.0f;
-      setpoint->attitude.yaw = values->yaw;
+      setpoint->attitudeRate.yaw = values->yaw;
+      break;
+
+    case simpleTraj:
+      /* Simple Trajectories */
+      setpoint->joy.roll = values->roll;
+      setpoint->joy.pitch = values->pitch;
+      setpoint->joy.yaw = values->yaw;
+      setpoint->joy.throttle = values->thrust/1000.0f;
+      break;
+
+    case genericTraj:
+      /* Generic Trajectories */
       break;
 
     default:
       /* Angle Mode */
-      setpoint->attitude.roll = values->roll;
+      setpoint->attitude.roll = -values->roll;
       setpoint->attitude.pitch = values->pitch;
       setpoint->thrust = values->thrust;
-      yawFromDesiredYawRate(values->yaw);
+      setpoint->attitudeRate.yaw = values->yaw;
   }
 }
 

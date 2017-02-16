@@ -55,6 +55,8 @@ struct vec3_s {
 typedef struct vec3_s point_t;
 typedef struct vec3_s velocity_t;
 typedef struct vec3_s acc_t;
+typedef struct vec3_s jerk_t;
+typedef struct vec3_s snap_t;
 
 /* Orientation as a quaternion */
 typedef struct quaternion_s {
@@ -147,19 +149,36 @@ typedef enum mode_e {
   angleMode = 0,
   velMode,
   posMode,
-  circMode
+  simpleTraj,
+  genericTraj,
 } mode_t;
+
+typedef struct joy_s {
+  uint32_t timestamp;
+
+  float roll;
+  float pitch;
+  float yaw;
+  float throttle;
+} joy_t;
 
 typedef struct setpoint_s {
   uint32_t timestamp;
 
+  rotation_t rotation;
   attitude_t attitude;
   attitude_t attitudeRate;
+  attitude_t attitudeAcc;
+
+  joy_t joy;
   float thrust;
+
   point_t position;
   velocity_t velocity;
   acc_t acc;
-  rotation_t rotation;
+  jerk_t jerk;
+  snap_t snap;
+
   mode_t mode;
 } setpoint_t;
 

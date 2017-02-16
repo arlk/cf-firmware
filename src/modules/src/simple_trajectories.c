@@ -38,17 +38,19 @@
 
 #include "simple_trajectories.h"
 
-static float circRad = 0.8f;
-static float circFreq = 0.2f;
-static float circAlt = 2.0f;
-static float circLisa = 1.0;
-static float circLisb = 2.0;
-static float circLisA = 2.0;
-static float circLisB = 1.0;
-
 static bool isInit;
 static uint32_t startTick = 0;
 static uint32_t nowTick = 0;
+
+static float circRad = 0.8f;
+static float circFreq = 0.2f;
+static float circAlt = 2.0f;
+
+typedef enum traj_e {
+  circTraj = 0
+} traj_t;
+
+static traj_t traj = 0;
 
 void trajectoryInit(const uint32_t tick)
 {
@@ -59,43 +61,67 @@ void trajectoryInit(const uint32_t tick)
   startTick = tick;
 }
 
-void updateTrajectory(attitude_t* attitudeDesired, setpoint_t* setpoint, const uint32_t tick)
+void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
 {
-    nowTick = tick - startTick;
+    float speed = setpoint->joy.throttle/60.0f;
+    float size = setpoint->joy.throttle/20.0f;
 
-    float Lissa_a = circLisa*2*PI*circFreq;
-    float Lissa_b = circLisb*2*PI*circFreq;
-    float Lissa_A = circLisA*circRad;
-    float Lissa_B = circLisB*circRad;
+    size = (size > 1.0f) ? 1.0f : size;
+    float omg = speed*2.0f*PI*circFreq;
+    float amp = size*circRad;
 
     setpoint->position.x =
-      Lissa_A*arm_cos_f32(Lissa_a*(float)tick*GEOMETRIC_UPDATE_DT);
+       amp*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
     setpoint->position.y =
-      Lissa_B*arm_sin_f32(Lissa_b*(float)tick*GEOMETRIC_UPDATE_DT);
+       amp*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
     setpoint->position.z = circAlt;
 
     setpoint->velocity.x =
-      -Lissa_A*Lissa_a*arm_sin_f32(Lissa_a*(float)tick*GEOMETRIC_UPDATE_DT);
+      -amp*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
     setpoint->velocity.y =
-      Lissa_B*Lissa_b*arm_cos_f32(Lissa_b*(float)tick*GEOMETRIC_UPDATE_DT);
-    setpoint->velocity.z = 0;
+       amp*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+    setpoint->velocity.z = 0.0f;
 
     setpoint->acc.x =
-      -Lissa_A*Lissa_a*Lissa_a*arm_cos_f32(Lissa_a*(float)tick*GEOMETRIC_UPDATE_DT);
+      -amp*omg*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
     setpoint->acc.y =
-      -Lissa_B*Lissa_b*Lissa_b*arm_sin_f32(Lissa_b*(float)tick*GEOMETRIC_UPDATE_DT);
-    setpoint->acc.z = 0;
+      -amp*omg*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+    setpoint->acc.z = 0.0f;
 
-    /* attitudeDesired->yaw = atan2f(setpoint->velocity.y, setpoint->velocity.x); */
-    attitudeDesired->yaw = Lissa_a*(float)tick*GEOMETRIC_UPDATE_DT;
+    setpoint->jerk.x =
+       amp*omg*omg*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+    setpoint->jerk.y =
+      -amp*omg*omg*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+    setpoint->jerk.z = 0.0f;
+
+    setpoint->snap.x =
+       amp*omg*omg*omg*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+    setpoint->snap.y =
+       amp*omg*omg*omg*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+    setpoint->snap.z = 0.0f;
+
+    setpoint->attitude.yaw = omg*(float)tick*GEOMETRIC_UPDATE_DT;
+    setpoint->attitudeRate.yaw = omg;
+    setpoint->attitudeAcc.yaw = 0.0f;
+}
+
+void updateTrajectory(setpoint_t* setpoint, const uint32_t tick)
+{
+    nowTick = tick - startTick;
+
+    switch (traj) {
+      case circTraj:
+        circleUpdate(setpoint, nowTick);
+        break;
+    }
 }
 
 PARAM_GROUP_START(circTraj)
 PARAM_ADD(PARAM_FLOAT, circRad, &circRad)
 PARAM_ADD(PARAM_FLOAT, circFreq, &circFreq)
 PARAM_ADD(PARAM_FLOAT, circAlt, &circAlt)
-PARAM_ADD(PARAM_FLOAT, circLisa, &circLisa)
-PARAM_ADD(PARAM_FLOAT, circLisb, &circLisb)
-PARAM_ADD(PARAM_FLOAT, circLisA, &circLisA)
-PARAM_ADD(PARAM_FLOAT, circLisB, &circLisB)
 PARAM_GROUP_STOP(circTraj)
+
+PARAM_GROUP_START(trajmode)
+PARAM_ADD(PARAM_UINT8, traj, &traj)
+PARAM_GROUP_STOP(trajmode)

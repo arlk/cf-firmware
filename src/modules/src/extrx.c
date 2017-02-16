@@ -71,9 +71,7 @@ static void extRxDecodeChannels(void);
 void extRxInit(void)
 {
 
-  extrxSetpoint.mode.roll = modeAbs;
-  extrxSetpoint.mode.pitch = modeAbs;
-  extrxSetpoint.mode.yaw = modeVelocity;
+  extrxSetpoint.mode = angleMode;
 
 #ifdef ENABLE_CPPM
   cppmInit();

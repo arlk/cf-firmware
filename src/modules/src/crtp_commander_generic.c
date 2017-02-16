@@ -90,15 +90,15 @@ static void velocityDecoder(setpoint_t *setpoint, uint8_t type, const void *data
 
   ASSERT(datalen == sizeof(struct velocityPacket_s));
 
-  setpoint->mode.x = modeVelocity;
-  setpoint->mode.y = modeVelocity;
-  setpoint->mode.z = modeVelocity;
+  /* setpoint->mode.x = modeVelocity; */
+  /* setpoint->mode.y = modeVelocity; */
+  /* setpoint->mode.z = modeVelocity; */
 
   setpoint->velocity.x = values->vx;
   setpoint->velocity.y = values->vy;
   setpoint->velocity.z = values->vz;
 
-  setpoint->mode.yaw = modeVelocity;
+  /* setpoint->mode.yaw = modeVelocity; */
 
   setpoint->attitudeRate.yaw = values->yawrate;
 }

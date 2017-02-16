@@ -54,12 +54,14 @@ void geometricControllerInit();
 bool geometricControllerTest();
 
 void geometricControllerGetAttitudeDesired(const state_t* state,
-    attitude_t* attitudeDesired, setpoint_t* setpoint);
+    setpoint_t* setpoint);
+
+void geometricControllerGetOmegaDesired(setpoint_t* setpoint);
 
 void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpoint);
 
 void geometricMomentController(const rotation_t* rotation, const sensorData_t *sensors,
-    rotation_t* rotationDes);
+    setpoint_t* setpoint);
 
 void geometricControllerGetActuatorOutput(int16_t* roll, int16_t* pitch, int16_t* yaw);
 

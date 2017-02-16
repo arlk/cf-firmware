@@ -44,4 +44,4 @@
 
 void trajectoryInit(const uint32_t tick);
 
-void updateTrajectory(attitude_t* attitudeDesired, setpoint_t* setpoint, const uint32_t tick);
+void updateTrajectory(setpoint_t* setpoint, const uint32_t tick);

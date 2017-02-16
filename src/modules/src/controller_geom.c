@@ -45,10 +45,16 @@
 #include "log.h"
 #include "param.h"
 
-static attitude_t attitudeDesired;
 static float actuatorThrust;
 
-static bool circMode = false;
+static void yawFromDesiredYawRate(setpoint_t *setpoint) {
+  setpoint->attitude.yaw -= setpoint->attitudeRate.yaw*GEOMETRIC_UPDATE_DT;
+
+  while (setpoint->attitude.yaw > PI)
+    setpoint->attitude.yaw -= 2*PI;
+  while (setpoint->attitude.yaw < -PI)
+    setpoint->attitude.yaw += 2*PI;
+}
 
 void stateControllerInit(void)
 {
@@ -72,64 +78,48 @@ void stateController(control_t *control, setpoint_t *setpoint,
   if (RATE_DO_EXECUTE(ATTITUDE_RATE, tick)) {
 
     switch (setpoint->mode) {
-      case 1:
+      case velMode:
         /* Velocity Mode */
-        setpoint->velocity.x = values->pitch;
-        setpoint->velocity.y = values->roll;
-        setpoint->position.z = values->thrust/1000.0f;
-        setpoint->attitudeRate.yaw = values->yaw;
+        setpoint->position.x = state->position.x;
+        setpoint->position.y = state->position.y;
+        yawFromDesiredYawRate(setpoint);
+        geometricControllerGetAttitudeDesired(state, setpoint);
+        geometricControllerGetThrustDesired(state, setpoint);
+        geometricControllerGetThrustOutput(&actuatorThrust);
         break;
 
-      case 2:
+      case posMode:
         /* Position Mode */
-        setpoint->position.x = -values->pitch;
-        setpoint->position.y = values->roll;
-        setpoint->position.z = values->thrust/1000.0f;
-        setpoint->attitude.yaw = values->yaw;
+        yawFromDesiredYawRate(setpoint);
+        geometricControllerGetAttitudeDesired(state, setpoint);
+        geometricControllerGetThrustDesired(state, setpoint);
+        geometricControllerGetThrustOutput(&actuatorThrust);
+        break;
+
+      case simpleTraj:
+        /* Simple Trajectories */
+        trajectoryInit(tick);
+        updateTrajectory(setpoint, tick);
+        geometricControllerGetAttitudeDesired(state, setpoint);
+        geometricControllerGetOmegaDesired(setpoint);
+        geometricControllerGetThrustDesired(state, setpoint);
+        geometricControllerGetThrustOutput(&actuatorThrust);
+        break;
+
+      case genericTraj:
+        /* Generic Trajectories */
         break;
 
       default:
         /* Angle Mode */
-        setpoint->attitude.roll = values->roll;
-        setpoint->attitude.pitch = values->pitch;
-        setpoint->attitudeRate.yaw = values->yaw;
-        setpoint->thrust = values->thrust;
+        setpoint->attitude.roll = setpoint->attitude.roll;
+        setpoint->attitude.pitch = -setpoint->attitude.pitch;
+        yawFromDesiredYawRate(setpoint);
+        eulerToRotationZYX(&setpoint->attitude, &setpoint->rotation);
+        actuatorThrust = setpoint->thrust;
     }
 
-    // Manual control (joystick)
-    if (circMode)
-    {
-      trajectoryInit(tick);
-      updateTrajectory(&attitudeDesired, setpoint, tick);
-      geometricControllerGetAttitudeDesired(state, &attitudeDesired, setpoint);
-      geometricControllerGetThrustDesired(state, setpoint);
-      geometricControllerGetThrustOutput(&actuatorThrust);
-    }
-    else if (setpoint->mode.x == modeDisable || setpoint->mode.y == modeDisable) {
-      attitudeDesired.roll = setpoint->attitude.roll*DEG_TO_RAD;
-      attitudeDesired.pitch = -setpoint->attitude.pitch*DEG_TO_RAD;
-      eulerToRotationZYX(&attitudeDesired, &setpoint->rotation);
-      actuatorThrust = setpoint->thrust;
-    }
-    // Crane mode (joystick velocities)
-    else if (setpoint->mode.x == modeVelocity &&
-        setpoint->mode.y == modeVelocity &&
-        setpoint->mode.z == modeAbs) {
-      setpoint->position.x = state->position.x;
-      setpoint->position.y = state->position.y;
-      geometricControllerGetAttitudeDesired(state, &attitudeDesired, setpoint);
-      geometricControllerGetThrustDesired(state, setpoint);
-      geometricControllerGetThrustOutput(&actuatorThrust);
-    }
-    // Position Set
-    else if (setpoint->mode.x == modeAbs &&
-        setpoint->mode.y == modeAbs &&
-        setpoint->mode.z == modeAbs) {
-      geometricControllerGetAttitudeDesired(state, &attitudeDesired, setpoint);
-      geometricControllerGetThrustDesired(state, setpoint);
-      geometricControllerGetThrustOutput(&actuatorThrust);
-    }
-    geometricMomentController(&state->rotation, sensors, &setpoint->rotation);
+    geometricMomentController(&state->rotation, sensors, setpoint);
 
     geometricControllerGetActuatorOutput(&control->roll,
                                          &control->pitch,
@@ -148,19 +138,12 @@ void stateController(control_t *control, setpoint_t *setpoint,
     control->pitch = 0;
     control->yaw = 0;
 
-    // Reset the integrated values if there is no thrust input
-    attitudeDesired.yaw = state->attitude.yaw*DEG_TO_RAD;
+    // Reset if there is no thrust input
+    setpoint->attitude.yaw = state->attitude.yaw;
   }
 }
 
 
 LOG_GROUP_START(controller)
 LOG_ADD(LOG_FLOAT, actuatorThrust, &actuatorThrust)
-LOG_ADD(LOG_FLOAT, roll,      &attitudeDesired.roll)
-LOG_ADD(LOG_FLOAT, pitch,     &attitudeDesired.pitch)
-LOG_ADD(LOG_FLOAT, yaw,       &attitudeDesired.yaw)
 LOG_GROUP_STOP(controller)
-
-PARAM_GROUP_START(trajmode)
-PARAM_ADD(PARAM_UINT8, circMode, &circMode)
-PARAM_GROUP_STOP(trajmode)

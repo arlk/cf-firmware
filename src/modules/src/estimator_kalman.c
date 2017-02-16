@@ -165,6 +165,8 @@ static inline bool stateEstimatorHasTOFPacket(tofMeasurement_t *tof) {
 //thrust is thrust mapped for 65536 <==> 60 GRAMS!
 #define CONTROL_TO_ACC (GRAVITY_MAGNITUDE*60.0f/CRAZYFLIE_WEIGHT_grams/65536.0f)
 
+#define MAX_PWM (65536.0f)
+
 #define SPEED_OF_LIGHT (299792458)
 
 // TODO: Decouple the TDOA implementation from the Kalman filter...
@@ -192,6 +194,9 @@ static inline bool stateEstimatorHasTOFPacket(tofMeasurement_t *tof) {
 // The bounds on states, these shouldn't be hit...
 #define MAX_POSITION (10) //meters
 #define MAX_VELOCITY (10) //meters per second
+
+// Thrust to mass ratio
+static float thrustToMassRatio = 2.0;
 
 // Initial variances, uncertain of position, but know we're stationary and roughly flat
 static const float stdDevInitialPosition_xy = 100;
@@ -377,7 +382,7 @@ void stateEstimatorUpdate(state_t *state, sensorData_t *sensors, control_t *cont
   }
 
   // Average the thrust command from the last timestep, generated externally by the controller
-  thrustAccumulator += control->thrust * CONTROL_TO_ACC; // thrust is in grams, we need ms^-2
+  thrustAccumulator += control->thrust * GRAVITY_MAGNITUDE * thrustToMassRatio / MAX_PWM; // thrust is in grams, we need ms^-2
   thrustAccumulatorCount++;
 
   // Run the system dynamics to predict the state forward.
@@ -1143,9 +1148,9 @@ static void stateEstimatorExternalizeState(state_t *state, sensorData_t *sensors
   // Save attitude, adjusted for the legacy CF2 body coordinate system
   state->attitude = (attitude_t){
       .timestamp = tick,
-      .roll = roll*RAD_TO_DEG,
-      .pitch = -pitch*RAD_TO_DEG,
-      .yaw = yaw*RAD_TO_DEG
+      .roll = roll,
+      .pitch = -pitch,
+      .yaw = yaw
   };
 
   // Save rotation ZYX, adjusted for the legacy CF2 body coordinate system
@@ -1333,4 +1338,5 @@ PARAM_GROUP_START(kalman)
   PARAM_ADD(PARAM_FLOAT, mNBaro, &measNoiseBaro)
   PARAM_ADD(PARAM_FLOAT, mNGyro_rollpitch, &measNoiseGyro_rollpitch)
   PARAM_ADD(PARAM_FLOAT, mNGyro_yaw, &measNoiseGyro_yaw)
+  PARAM_ADD(PARAM_FLOAT, thrustMass, &thrustToMassRatio)
 PARAM_GROUP_STOP(kalman)
