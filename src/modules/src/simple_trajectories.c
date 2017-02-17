@@ -50,6 +50,8 @@ static float omg = 0;
 static float amp = 0;
 static float phase = 0;
 
+#define BETA 0.999400359f
+
 typedef enum traj_e {
   noneTraj = 0,
   circTraj
@@ -68,15 +70,16 @@ void trajectoryInit(const uint32_t tick)
 
 void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
 {
+    float amp_des;
     float speed = setpoint->joy.throttle/60.0f;
     float size = setpoint->joy.throttle/20.0f;
-
-    size = (size > 1.0f) ? 1.0f : size;
+    size = (size > 0.05f) ? 1.0f : size;
 
     phase = (omg - speed*2.0f*PI*circFreq)*tick*GEOMETRIC_UPDATE_DT + phase;
-
     omg = speed*2.0f*PI*circFreq;
-    amp = size*circRad;
+
+    amp_des = size*circRad;
+    amp = (1.0f-BETA)*amp_des + BETA*amp;
 
     setpoint->position.x =
        amp*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT + phase);
