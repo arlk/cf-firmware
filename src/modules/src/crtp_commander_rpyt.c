@@ -28,6 +28,7 @@
 
 #include "crtp_commander.h"
 
+#include "arm_math.h"
 #include "commander.h"
 #include "crtp.h"
 #include "param.h"
@@ -36,7 +37,7 @@
 
 #define MIN_THRUST  1000
 #define MAX_THRUST  60000
-#define DEG_TO_RAD (3.141f/180.0f)
+#define DEG_TO_RAD (PI/180.0f)
 
 static mode_t mode;
 

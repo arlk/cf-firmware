@@ -73,7 +73,7 @@ void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
     float amp_des;
     float speed = setpoint->joy.throttle/60.0f;
     float size = setpoint->joy.throttle/20.0f;
-    size = (size > 0.05f) ? 1.0f : size;
+    size = (size > 0.20f) ? 1.0f : 0.0f;
 
     phase = (omg - speed*2.0f*PI*circFreq)*tick*GEOMETRIC_UPDATE_DT + phase;
     omg = speed*2.0f*PI*circFreq;
