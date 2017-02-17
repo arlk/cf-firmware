@@ -46,6 +46,10 @@ static float circRad = 0.8f;
 static float circFreq = 0.2f;
 static float circAlt = 2.0f;
 
+static float omg = 0;
+static float amp = 0;
+static float phase = 0;
+
 typedef enum traj_e {
   noneTraj = 0,
   circTraj
@@ -68,40 +72,47 @@ void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
     float size = setpoint->joy.throttle/20.0f;
 
     size = (size > 1.0f) ? 1.0f : size;
-    float omg = speed*2.0f*PI*circFreq;
-    float amp = size*circRad;
+
+    phase = (omg - speed*2.0f*PI*circFreq)*tick*GEOMETRIC_UPDATE_DT + phase;
+
+    omg = speed*2.0f*PI*circFreq;
+    amp = size*circRad;
 
     setpoint->position.x =
-       amp*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+       amp*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT + phase);
     setpoint->position.y =
-       amp*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+       amp*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT + phase);
     setpoint->position.z = circAlt;
 
     setpoint->velocity.x =
-      -amp*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+      -amp*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT + phase);
     setpoint->velocity.y =
-       amp*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+       amp*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT + phase);
     setpoint->velocity.z = 0.0f;
 
     setpoint->acc.x =
-      -amp*omg*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+      -amp*omg*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT + phase);
     setpoint->acc.y =
-      -amp*omg*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+      -amp*omg*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT + phase);
     setpoint->acc.z = 0.0f;
 
     setpoint->jerk.x =
-       amp*omg*omg*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+       amp*omg*omg*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT +
+           phase);
     setpoint->jerk.y =
-      -amp*omg*omg*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+      -amp*omg*omg*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT +
+          phase);
     setpoint->jerk.z = 0.0f;
 
     setpoint->snap.x =
-       amp*omg*omg*omg*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+       amp*omg*omg*omg*omg*arm_cos_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT +
+           phase);
     setpoint->snap.y =
-       amp*omg*omg*omg*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT);
+       amp*omg*omg*omg*omg*arm_sin_f32(omg*(float)tick*GEOMETRIC_UPDATE_DT +
+           phase);
     setpoint->snap.z = 0.0f;
 
-    setpoint->attitude.yaw = omg*(float)tick*GEOMETRIC_UPDATE_DT;
+    setpoint->attitude.yaw = omg*(float)tick*GEOMETRIC_UPDATE_DT + phase;
     setpoint->attitudeRate.yaw = omg;
     setpoint->attitudeAcc.yaw = 0.0f;
 }
