@@ -36,6 +36,9 @@
 
 #define MIN_THRUST  1000
 #define MAX_THRUST  60000
+#define DEG_TO_RAD (3.141f/180.0f)
+
+static mode_t mode;
 
 /**
  * CRTP commander rpyt packet format
@@ -70,9 +73,10 @@ void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk)
     setpoint->thrust = min(rawThrust, MAX_THRUST);
   }
 
-  switch (setpoint->mode) {
+  switch (mode) {
     case velMode:
       /* Velocity Mode */
+      setpoint->mode = velMode;
       setpoint->velocity.x = -values->pitch;
       setpoint->velocity.y = values->roll;
       setpoint->position.z = values->thrust/1000.0f;
@@ -81,6 +85,7 @@ void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk)
 
     case posMode:
       /* Position Mode */
+      setpoint->mode = posMode;
       setpoint->position.x = -values->pitch;
       setpoint->position.y = values->roll;
       setpoint->position.z = values->thrust/1000.0f;
@@ -89,6 +94,7 @@ void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk)
 
     case simpleTraj:
       /* Simple Trajectories */
+      setpoint->mode = simpleTraj;
       setpoint->joy.roll = values->roll;
       setpoint->joy.pitch = values->pitch;
       setpoint->joy.yaw = values->yaw;
@@ -96,15 +102,18 @@ void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk)
       break;
 
     case genericTraj:
-      /* Generic Trajectories */
+      setpoint->mode = genericTraj;
       break;
 
     default:
-      /* Angle Mode */
-      setpoint->attitude.roll = -values->roll;
-      setpoint->attitude.pitch = values->pitch;
-      setpoint->thrust = values->thrust;
-      setpoint->attitudeRate.yaw = values->yaw;
+      setpoint->mode = angleMode;
+      setpoint->attitude.roll = -values->roll*DEG_TO_RAD;
+      setpoint->attitude.pitch = values->pitch*DEG_TO_RAD;
+      setpoint->attitudeRate.yaw = values->yaw*DEG_TO_RAD;
   }
 }
 
+
+PARAM_GROUP_START(flightmode)
+PARAM_ADD(PARAM_UINT8, mode, &mode)
+PARAM_GROUP_STOP(flightmode)

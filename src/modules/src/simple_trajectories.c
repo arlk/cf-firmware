@@ -114,6 +114,11 @@ void updateTrajectory(setpoint_t* setpoint, const uint32_t tick)
       case circTraj:
         circleUpdate(setpoint, nowTick);
         break;
+
+      case noneTraj:
+
+      default:
+        break;
     }
 }
 

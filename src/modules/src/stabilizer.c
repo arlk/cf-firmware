@@ -170,7 +170,3 @@ LOG_GROUP_STOP(mag)
 LOG_GROUP_START(controller)
 LOG_ADD(LOG_INT16, ctr_yaw, &control.yaw)
 LOG_GROUP_STOP(controller)
-
-PARAM_GROUP_START(flightmode)
-PARAM_ADD(PARAM_UINT8, mode, &setpoint.mode)
-PARAM_GROUP_STOP(flightmode)
