@@ -43,6 +43,11 @@
 #include "param.h"
 #include "log.h"
 
+static float manip_rollMoment;
+static float manip_pitchMoment;
+static float manip_yawMoment;
+static float manip_mom_gain = 30000.0f;
+
 static float k_pos_xy = 0.85f;
 static float k_pos_z = 0.65f;
 static float k_vel_xy = 0.45f;
@@ -219,7 +224,15 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
          + (k_pos_z*errPosition[2] + k_vel_z*errVelocity[2]
                 + mass*(GRAVITY + setpoint->acc.z))*state->rotation.vals[2][2];
 
+  #ifdef SERIAL_MANIPULATOR
+
   thrustOutput = thr_gain*thrustForce;
+
+  #else
+
+  thrustOutput = thr_gain*thrustForce;
+
+  #endif
 }
 
 void geometricMomentController(const rotation_t* rotation,
@@ -268,10 +281,22 @@ void geometricMomentController(const rotation_t* rotation,
               + (j_xx - j_zz)*sensors->gyro.x*sensors->gyro.z;
   yawMoment   = (-k_rot_z*0.5f*errRotation[2] -k_omg_z*errOmega[2])
               + (-j_xx + j_yy)*sensors->gyro.x*sensors->gyro.y;
+  
 
+  #ifdef SERIAL_MANIPULATOR
+
+  rollOutput  = saturateSignedInt16(/*mom_gain*rollMoment +*/ manip_mom_gain*manip_rollMoment);
+  //pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*manip_pitchMoment);
+  pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
+  yawOutput   = saturateSignedInt16(/*mom_gain*yawMoment +*/ manip_mom_gain*manip_yawMoment);
+  
+  #else
+  
   rollOutput  = saturateSignedInt16(mom_gain*rollMoment);
   pitchOutput = saturateSignedInt16(mom_gain*pitchMoment);
   yawOutput   = saturateSignedInt16(mom_gain*yawMoment);
+  
+  #endif /* SERIAL_MANIPULATOR */
 }
 
 void geometricControllerGetActuatorOutput(int16_t* roll, int16_t* pitch, int16_t* yaw)
