@@ -46,6 +46,8 @@ static float circRad = 0.8f;
 static float circFreq = 0.2f;
 static float circAlt = 2.0f;
 
+static float nchosk[5][11] = {{1,6,15,20,15,6,1,0,0,0},{1,7,21,35,35,21,7,1,0,0},{1,8,28,56,70,56,28,8,1,0},{1,9,36,84,126,126,84,36,9,1}};
+
 /* static float omg = 0; */
 /* static float amp = 0; */
 /* static float phase = 0; */
@@ -123,7 +125,8 @@ void updateTrajectory(setpoint_t* setpoint, const uint32_t tick)
 {
     nowTick = tick - startTick;
 
-    if(nowTick >= P_control.total_time/GEOMETRIC_UPDATE_DT){
+    /* if(nowTick >= P_control.total_time/GEOMETRIC_UPDATE_DT){ */
+    if(0){
       nowTick = 0;
 		  P_control = *P_control.next;
 		  diffBezier(&P_control, &V_control);
@@ -168,7 +171,7 @@ void compBezier (traj* P, float time, float* vec){
     t = time / P->total_time;
     n = (float)P->n;
             for(i=0;i<=n;i++){
-				        coef = nchoosek(n, i)*(float)(pow((double)(1.0f - t), (double)(n - (float)i)))*((float)pow((double)t,(double)i));
+                coef = nchosk[P->n-6][i]*powf((1.0f - t), n - (float)i)* (powf(t,(float)i));
                 vec[0] = vec[0] + coef*P->Cx[i];
                 vec[1] = vec[1] + coef*P->Cy[i];
                 vec[2] = vec[2] + coef*P->Cz[i];
@@ -210,10 +213,10 @@ float Cz4[10] = { -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.00
   P3.n = 9;
   P4.n = 9;
 
-  P1.total_time = 10.0;
-  P2.total_time = 10.0;
-  P3.total_time = 10.0;
-  P4.total_time = 10.0;
+  P1.total_time = 30.0;
+  P2.total_time = 100.0;
+  P3.total_time = 100.0;
+  P4.total_time = 100.0;
 
   P1.next = &P2;
   P2.next = &P3;
