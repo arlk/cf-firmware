@@ -41,6 +41,25 @@
 #include "geometric_controller.h"
 #include "param.h"
 #include "log.h"
+#include "math.h" //Thaigo
+
+/* Thiago added funtions and definitions*/
+float nchoosek (float N, float K);
+
+typedef struct traj traj;
+struct traj{
+    float Cx[10];
+    float Cy[10];
+    float Cz[10];
+    int n;
+    float total_time;
+    traj *next;
+};
+void compBezier (traj* P, float t, float* vec);
+void diffBezier(traj* P, traj* V);
+void initBezierTraj(void);
+
+/* end of Thiago added stuff*/
 
 void trajectoryInit(const uint32_t tick);
 
