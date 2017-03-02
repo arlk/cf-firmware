@@ -78,7 +78,7 @@ void trajectoryInit(const uint32_t tick)
 {
   if(isInit)
     return;
-
+  initBezierTraj();
   isInit = true;
   startTick = tick;
 }
@@ -86,13 +86,13 @@ void trajectoryInit(const uint32_t tick)
 void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
 {
     float P_vec[3];
-    float V_vec[3];
-    float A_vec[3];
-    float J_vec[3];
-    float pre_comp[9];
-    float pre_comp_n[9];
-    compt_coef (pre_comp,pre_comp_n,(float)tick*GEOMETRIC_UPDATE_DT,P_control.n,P_control.total_time);
-    compBezier(&P_control,P_vec,pre_comp,pre_comp_n,0);
+    /* float V_vec[3]; */
+    /* float A_vec[3]; */
+    /* float J_vec[3]; */
+     float pre_comp[9]; 
+     float pre_comp_n[9]; 
+    // compt_coef (pre_comp,pre_comp_n,(float)tick*GEOMETRIC_UPDATE_DT,P_control.n,P_control.total_time); 
+     compBezier(&P_control,P_vec,pre_comp,pre_comp_n,0,(float)tick*GEOMETRIC_UPDATE_DT); 
     //compBezier(&V_control,V_vec,pre_comp,pre_comp_n,1);
     //compBezier(&A_control,A_vec,pre_comp,pre_comp_n,2);
     //compBezier(&J_control,J_vec,pre_comp,pre_comp_n,3);
@@ -131,9 +131,9 @@ void updateTrajectory(setpoint_t* setpoint, const uint32_t tick)
     if(nowTick >= P_control.total_time/GEOMETRIC_UPDATE_DT)
     {
       startTick = tick;
-		  P_control = *P_control.next;
-		 diffBezier(&P_control, &V_control);
-		// diffBezier(&V_control, &A_control);
+      P_control = *P_control.next;
+      diffBezier(&P_control, &V_control); */
+      diffBezier(&V_control, &A_control);
 		// diffBezier(&A_control, &J_control);
     }
 
@@ -162,15 +162,17 @@ float nchoosek (float N, float K){
     return result;
 }
 
-void compBezier (traj* P, float* vec, float* c,float*cn,int bias){
+void compBezier (traj* P, float* vec, float* c,float*cn,int bias,float t){
     int i;
-    float coef,l;
+    float coef;
+    float time = t/P->total_time;
     vec[0] = 0.0;
     vec[1] = 0.0;
     vec[2] = 0.0;
             for(i=0;i<=P->n;i++){
 
-                coef =  nchosk[P->n-6][i]*cn[i+bias]*c[i];
+                coef =  nchosk[P->n-6][i];//*cn[i+bias]*c[i];
+                coef = coef*powf(time,(float)i)*powf((1.0f - time), P->n - (float)i);
                 vec[0] = vec[0] + coef*P->Cx[i];
                 vec[1] = vec[1] + coef*P->Cy[i];
                 //vec[2] = vec[2] + coef*P->Cz[i];

@@ -57,9 +57,10 @@ struct traj{
 };
 
 float power2int (float x, int n);
-void compBezier (traj* P,float* vec, float* c,float*cn, int bias);
+void compBezier (traj* P,float* vec, float* c,float*cn, int bias, float t);
 void diffBezier(traj* P, traj* V);
 void compt_coef (float *coef1,float *coef2,float time, int n, float ttime);
+void initBezierTraj(void);
 /* end of Thiago added stuff*/
 
 void trajectoryInit(const uint32_t tick);
