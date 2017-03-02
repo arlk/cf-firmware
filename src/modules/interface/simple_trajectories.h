@@ -55,9 +55,9 @@ struct traj{
     float total_time;
     traj *next;
 };
-void compBezier (traj* P, float t, float* vec);
+void compBezier (traj* P, float time, float* vec, float* c);
 void diffBezier(traj* P, traj* V);
-void initBezierTraj(void);
+void compt_coef (float *coef,float time, int n, float ttime);
 
 /* end of Thiago added stuff*/
 

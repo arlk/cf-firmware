@@ -89,11 +89,12 @@ void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
     float V_vec[3];
     float A_vec[3];
     float J_vec[3];
-
-    compBezier(&P_control,(float)tick*GEOMETRIC_UPDATE_DT,P_vec);
-    compBezier(&V_control,(float)tick*GEOMETRIC_UPDATE_DT,V_vec);
-    compBezier(&A_control,(float)tick*GEOMETRIC_UPDATE_DT,A_vec);
-    compBezier(&J_control,(float)tick*GEOMETRIC_UPDATE_DT,J_vec);
+    float pre_comp_coef[9];
+    compt_coef (pre_comp_coef,(float)tick*DT,P_control.n,P_control.total_time);
+    compBezier(&P_control,(float)tick*GEOMETRIC_UPDATE_DT,P_vec,pre_comp_coef);
+    compBezier(&V_control,(float)tick*GEOMETRIC_UPDATE_DT,V_vec,pre_comp_coef);
+    compBezier(&A_control,(float)tick*GEOMETRIC_UPDATE_DT,A_vec,pre_comp_coef);
+    compBezier(&J_control,(float)tick*GEOMETRIC_UPDATE_DT,J_vec,pre_comp_coef);
 
 
     setpoint->position.x = P_vec[0];
@@ -159,19 +160,17 @@ float nchoosek (float N, float K){
     return result;
 }
 
-void compBezier (traj* P, float time, float* vec){
-    int i;
-    float n;
+void compBezier (traj* P, float time, float* vec, float* c){
+    int i,n;
     float coef;
     float t;
-
+    t = time/P->total_time;
+    n = P->n;
     vec[0] = 0.0;
     vec[1] = 0.0;
     vec[2] = 0.0;
-    t = time / P->total_time;
-    n = (float)P->n;
-            for(i=0;i<=n;i++){
-                coef = nchosk[P->n-6][i]*powf((1.0f - t), n - (float)i)* (powf(t,(float)i));
+            for(i=0;i<=P->n;i++){
+                coef =  nchosk[P->n-6][i]*power2int((1.0f - t), n - i)*c[i];
                 vec[0] = vec[0] + coef*P->Cx[i];
                 vec[1] = vec[1] + coef*P->Cy[i];
                 vec[2] = vec[2] + coef*P->Cz[i];
@@ -181,42 +180,64 @@ void compBezier (traj* P, float time, float* vec){
 void diffBezier(traj* P, traj* V) {
 	float n = (float)P->n;
 	V->n = P->n - 1;
+	V-> total_time = P->total_time;
 	for (int i = 0; i <= n-1; i++) {
-
-		V->Cx[i] = n*(P->Cx[i + 1] - P->Cx[i]);
-		V->Cy[i] = n*(P->Cy[i + 1] - P->Cy[i]);
-		V->Cz[i] = n*(P->Cz[i + 1] - P->Cz[i]);
+		V->Cx[i] = n*(P->Cx[i + 1] - P->Cx[i])/V-> total_time;
+		V->Cy[i] = n*(P->Cy[i + 1] - P->Cy[i])/V-> total_time;
+		V->Cz[i] = n*(P->Cz[i + 1] - P->Cz[i])/V-> total_time;
 	}
+}
+
+void compt_coef (float *coef,float time, int n, float ttime){
+    float t;
+    float m;
+    t = time /ttime;
+    m =(float)n;
+    for(int i=0;i<=n;i++){
+     coef[i] =   (power2int(t,i));
+    //    coef[i] = powf((1.0f - t), m - (float)i)* (powf(t,(float)i));
+    }
+}
+
+float power2int (float x, int n){
+    float number = 1.0f;
+   while(n){
+       if(n & 1)
+           number *=x;
+       n >>=1;
+       x *=x;
+    }
+    return(number);
 }
 
 void initBezierTraj(void)
 {
 
-float Cx1[10] = { 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.029165 , 1.454606 , 1.884145 , 1.612634 , 1.000000 };
-float Cy1[10] = { 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.034125 , 0.432997 , 0.747570 , 0.943275 , 1.000000 };
-float Cz1[10] = { 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+  float Cx1[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.046966 , 0.167899 , 0.429725 , 0.735613 , 1.000000 };
+  float Cy1[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.010024 , -0.217828 , -0.264585 , -0.175490 , 0.000000 };
+  float Cz1[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
 
-float Cx2[10] = { 1.000000 , 0.706245 , 0.334059 , -0.076876 , -0.486526 , -0.838811 , -1.161774 , -1.262052 , -1.191277 , -1.000000 };
-float Cy2[10] = { 1.000000 , 1.027199 , 1.022445 , 0.983519 , 0.908969 , 0.795044 , 0.644598 , 0.449191 , 0.228074 , 0.000000 };
-float Cz2[10] = { -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+  float Cx2[10] = { 1.000000 , 1.130960 , 1.251738 , 1.351935 , 1.421830 , 1.446633 , 1.432744 , 1.337164 , 1.184861 , 1.000000 };
+  float Cy2[10] = { 0.000000 , 0.086927 , 0.195051 , 0.318363 , 0.450598 , 0.584525 , 0.719483 , 0.835800 , 0.930266 , 1.000000 };
+  float Cz2[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
 
-float Cx3[10] = { -1.000000 , -0.836862 , -0.586067 , -0.278978 , 0.053616 , 0.372574 , 0.676429 , 0.870865 , 0.972571 , 1.000000 };
-float Cy3[10] = { -0.000000 , -0.194522 , -0.394105 , -0.587117 , -0.762191 , -0.905684 , -1.014453 , -1.058812 , -1.049906 , -1.000000 };
-float Cz3[10] = { -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+  float Cx3[10] = { 1.000000 , 0.886831 , 0.761461 , 0.629433 , 0.496180 , 0.368284 , 0.247258 , 0.146770 , 0.064990 , 0.000000 };
+  float Cy3[10] = { 1.000000 , 1.042690 , 1.076111 , 1.099603 , 1.112550 , 1.114005 , 1.104423 , 1.080949 , 1.045473 , 1.000000 };
+  float Cz3[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
 
-float Cx4[10] = { 1.000000 , 1.044439 , 0.893909 , 0.626884 , 0.333996 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
-float Cy4[10] = { -1.000000 , -0.919146 , -0.730673 , -0.486745 , -0.247243 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
-float Cz4[10] = { -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+  float Cx4[10] = { 0.000000 , -0.178878 , -0.230554 , -0.194989 , -0.117090 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+  float Cy4[10] = { 1.000000 , 0.874841 , 0.673957 , 0.439204 , 0.219229 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+  float Cz4[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
 
   P1.n = 9;
   P2.n = 9;
   P3.n = 9;
   P4.n = 9;
 
-  P1.total_time = 30.0;
-  P2.total_time = 100.0;
-  P3.total_time = 100.0;
-  P4.total_time = 100.0;
+  P1.total_time = 15.0520;
+  P2.total_time = 7.6000 ;
+  P3.total_time = 4.5880;
+  P4.total_time = 12.7600;
 
   P1.next = &P2;
   P2.next = &P3;
