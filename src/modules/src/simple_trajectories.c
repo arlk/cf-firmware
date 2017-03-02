@@ -90,8 +90,8 @@ void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
      float V_vec[3];
      float A_vec[3];
      float J_vec[3];
-    // float pre_comp[9];
-     //float pre_comp_n[9];
+     float pre_comp[9];
+     float pre_comp_n[9];
     // compt_coef (pre_comp,pre_comp_n,(float)tick*GEOMETRIC_UPDATE_DT,P_control.n,P_control.total_time);
      compBezier(&P_control,P_vec,pre_comp,pre_comp_n,0,(float)tick*GEOMETRIC_UPDATE_DT);
     compBezier(&V_control,V_vec,pre_comp,pre_comp_n,1,(float)tick*GEOMETRIC_UPDATE_DT);
@@ -185,8 +185,8 @@ void diffBezier(traj* P, traj* V) {
 	V->n = P->n - 1;
 	V-> total_time = P->total_time;
 	for (int i = 0; i <= n-1; i++) {
-		V->Cx[i] = n*(P->Cx[i + 1] - P->Cx[i])/V-> total_time;
-		V->Cy[i] = n*(P->Cy[i + 1] - P->Cy[i])/V-> total_time;
+		V->Cx[i] = n*(P->Cx[i + 1] - P->Cx[i])/(V-> total_time);
+		V->Cy[i] = n*(P->Cy[i + 1] - P->Cy[i])/(V-> total_time);
 		//V->Cz[i] = n*(P->Cz[i + 1] - P->Cz[i])/V-> total_time;
 	}
 }
@@ -216,7 +216,7 @@ float power2int (float x, int n){
 void initBezierTraj(void)
 {
 
-  ffloat Cx1[10] = { 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.077517 , 3.160650 , 4.042828 , 3.383586 , 2.000000 };
+  float Cx1[10] = { 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.077517 , 3.160650 , 4.042828 , 3.383586 , 2.000000 };
 float Cy1[10] = { 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.104893 , 0.188849 , 0.698882 , 1.380214 , 2.000000 };
 float Cz1[10] = { 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
 
@@ -242,11 +242,11 @@ float Cz5[10] = { -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.00
   P4.n = 9;
   P5.n = 9;
 
-  P1.total_time = 5.1000 ;
-  P2.total_time = 2.4960;
-  P3.total_time = 2.0925 ;
-  P4.total_time = 1.9920 ;
-  P5.total_time = 3.3210;
+  P1.total_time = 2.0*5.1000 ;
+  P2.total_time = 2.0*2.4960;
+  P3.total_time = 2.0*2.0925 ;
+  P4.total_time = 2.0*1.9920 ;
+  P5.total_time = 2.0*3.3210;
   P1.next = &P2;
   P2.next = &P3;
   P3.next = &P4;
