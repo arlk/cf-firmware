@@ -97,18 +97,19 @@ void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
    // compBezier(&J_control,(float)tick*GEOMETRIC_UPDATE_DT,J_vec,pre_comp_coef);
 
 
-    setpoint->position.x = P_vec[0];
+    setpoint->position.x = P_vec[0] + sin(tick*GEOMETRIC_UPDATE_DT);
     setpoint->position.y = P_vec[1];
     setpoint->position.z = circAlt;
 
-  //  setpoint->velocity.x = V_vec[0];
+    setpoint->velocity.x = 0*V_vec[0] + cos(tick*GEOMETRIC_UPDATE_DT);
    // setpoint->velocity.y = V_vec[1];
     setpoint->velocity.z = 0.0f;
 
+setpoint->acc.x = -sin(tick*GEOMETRIC_UPDATE_DT);
    // setpoint->acc.x = A_vec[0];
    // setpoint->acc.y = A_vec[1];
     setpoint->acc.z = 0.0f;
-
+setpoint->jerk.x =-cos(tick*GEOMETRIC_UPDATE_DT);
     //setpoint->jerk.x = J_vec[0];
     //setpoint->jerk.y = J_vec[1];
     setpoint->jerk.z = 0.0f;
