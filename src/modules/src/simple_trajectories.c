@@ -59,6 +59,7 @@ static traj P1;
 static traj P2;
 static traj P3;
 static traj P4;
+static traj P5;
 static traj P_control;
 static traj V_control;
 static traj J_control;
@@ -86,13 +87,13 @@ void trajectoryInit(const uint32_t tick)
 void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
 {
     float P_vec[3];
-     float V_vec[3]; 
-     float A_vec[3]; 
-     float J_vec[3]; 
-    // float pre_comp[9]; 
-     //float pre_comp_n[9]; 
-    // compt_coef (pre_comp,pre_comp_n,(float)tick*GEOMETRIC_UPDATE_DT,P_control.n,P_control.total_time); 
-     compBezier(&P_control,P_vec,pre_comp,pre_comp_n,0,(float)tick*GEOMETRIC_UPDATE_DT); 
+     float V_vec[3];
+     float A_vec[3];
+     float J_vec[3];
+    // float pre_comp[9];
+     //float pre_comp_n[9];
+    // compt_coef (pre_comp,pre_comp_n,(float)tick*GEOMETRIC_UPDATE_DT,P_control.n,P_control.total_time);
+     compBezier(&P_control,P_vec,pre_comp,pre_comp_n,0,(float)tick*GEOMETRIC_UPDATE_DT);
     compBezier(&V_control,V_vec,pre_comp,pre_comp_n,1,(float)tick*GEOMETRIC_UPDATE_DT);
     compBezier(&A_control,A_vec,pre_comp,pre_comp_n,2,(float)tick*GEOMETRIC_UPDATE_DT);
     compBezier(&J_control,J_vec,pre_comp,pre_comp_n,3,(float)tick*GEOMETRIC_UPDATE_DT);
@@ -132,7 +133,7 @@ void updateTrajectory(setpoint_t* setpoint, const uint32_t tick)
     {
       startTick = tick;
       P_control = *P_control.next;
-      diffBezier(&P_control, &V_control); 
+      diffBezier(&P_control, &V_control);
       diffBezier(&V_control, &A_control);
 	 diffBezier(&A_control, &J_control);
     }
@@ -215,36 +216,42 @@ float power2int (float x, int n){
 void initBezierTraj(void)
 {
 
-  float Cx1[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.046966 , 0.167899 , 0.429725 , 0.735613 , 1.000000 };
-  float Cy1[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.010024 , -0.217828 , -0.264585 , -0.175490 , 0.000000 };
-  float Cz1[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+  ffloat Cx1[10] = { 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.077517 , 3.160650 , 4.042828 , 3.383586 , 2.000000 };
+float Cy1[10] = { 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.104893 , 0.188849 , 0.698882 , 1.380214 , 2.000000 };
+float Cz1[10] = { 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
 
-  float Cx2[10] = { 1.000000 , 1.130960 , 1.251738 , 1.351935 , 1.421830 , 1.446633 , 1.432744 , 1.337164 , 1.184861 , 1.000000 };
-  float Cy2[10] = { 0.000000 , 0.086927 , 0.195051 , 0.318363 , 0.450598 , 0.584525 , 0.719483 , 0.835800 , 0.930266 , 1.000000 };
-  float Cz2[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+float Cx2[10] = { 2.000000 , 1.322900 , 0.472324 , -0.455963 , -1.366055 , -2.117639 , -2.796182 , -2.901258 , -2.586339 , -2.000000 };
+float Cy2[10] = { 2.000000 , 2.303311 , 2.591883 , 2.838424 , 3.016904 , 3.089726 , 3.069267 , 2.849383 , 2.477481 , 2.000000 };
+float Cz2[10] = { -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
 
-  float Cx3[10] = { 1.000000 , 0.886831 , 0.761461 , 0.629433 , 0.496180 , 0.368284 , 0.247258 , 0.146770 , 0.064990 , 0.000000 };
-  float Cy3[10] = { 1.000000 , 1.042690 , 1.076111 , 1.099603 , 1.112550 , 1.114005 , 1.104423 , 1.080949 , 1.045473 , 1.000000 };
-  float Cz3[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+float Cx3[10] = { -2.000000 , -1.508521 , -0.826340 , -0.040960 , 0.762532 , 1.468774 , 2.096374 , 2.340382 , 2.281782 , 2.000000 };
+float Cy3[10] = { 2.000000 , 1.599767 , 1.125354 , 0.604110 , 0.062910 , -0.466127 , -0.973968 , -1.396479 , -1.737262 , -2.000000 };
+float Cz3[10] = { -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
 
-  float Cx4[10] = { 0.000000 , -0.178878 , -0.230554 , -0.194989 , -0.117090 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
-  float Cy4[10] = { 1.000000 , 0.874841 , 0.673957 , 0.439204 , 0.219229 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
-  float Cz4[10] = { 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+float Cx4[10] = { 2.000000 , 1.731744 , 1.261218 , 0.656950 , -0.013813 , -0.667450 , -1.293816 , -1.702485 , -1.925971 , -2.000000 };
+float Cy4[10] = { -2.000000 , -2.250126 , -2.429520 , -2.541360 , -2.588891 , -2.575162 , -2.504468 , -2.376690 , -2.203994 , -2.000000 };
+float Cz4[10] = { -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+
+float Cx5[10] = { -2.000000 , -2.123418 , -1.831426 , -1.289564 , -0.688180 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+float Cy5[10] = { -2.000000 , -1.659907 , -1.232821 , -0.781852 , -0.381335 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
+float Cz5[10] = { -0.000000 , 0.000000 , -0.000000 , 0.000000 , -0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 };
 
   P1.n = 9;
   P2.n = 9;
   P3.n = 9;
   P4.n = 9;
+  P5.n = 9;
 
-  P1.total_time = 15.0520;
-  P2.total_time = 7.6000 ;
-  P3.total_time = 4.5880;
-  P4.total_time = 12.7600;
-
+  P1.total_time = 5.1000 ;
+  P2.total_time = 2.4960;
+  P3.total_time = 2.0925 ;
+  P4.total_time = 1.9920 ;
+  P5.total_time = 3.3210;
   P1.next = &P2;
   P2.next = &P3;
   P3.next = &P4;
-  P4.next = &P1;
+  P4.next = &P5;
+  P5.next = &P1;
 
   for (int i = 0; i <= P1.n; i++) {
 		  P1.Cx[i] = Cx1[i];
@@ -269,12 +276,18 @@ void initBezierTraj(void)
       P4.Cy[i] = Cy4[i];
       P4.Cz[i] = Cz4[i];
     }
+    for (int i = 0; i <= P1.n; i++) {
+        P5.Cx[i] = Cx5[i];
+        P5.Cy[i] = Cy5[i];
+        P5.Cz[i] = Cz5[i];
+      }
+
 
 
       P_control = P1;
-   	//  diffBezier(&P_control, &V_control);
-   	 // diffBezier(&V_control, &A_control);
-   	  //diffBezier(&A_control, &J_control);
+   	  diffBezier(&P_control, &V_control);
+   	  diffBezier(&V_control, &A_control);
+   	  diffBezier(&A_control, &J_control);
 
 }
 /* end thiago's mods*/
