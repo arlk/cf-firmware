@@ -92,27 +92,27 @@ void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
     float pre_comp[9];
     float pre_comp_n[9];
     compt_coef (pre_comp,pre_comp_n,(float)tick*GEOMETRIC_UPDATE_DT,P_control.n,P_control.total_time);
-    compBezier(&P_control,P_vec,pre_comp_coef,0);
-    //compBezier(&V_control,V_vec,pre_comp_coef,1);
-   // compBezier(&A_control,A_vec,pre_comp_coef,2);
-   // compBezier(&J_control,J_vec,pre_comp_coef,3);
+    compBezier(&P_control,P_vec,pre_comp,pre_comp_n,0);
+    compBezier(&V_control,V_vec,pre_comp,pre_comp_n,1);
+    compBezier(&A_control,A_vec,pre_comp,pre_comp_n,2);
+    compBezier(&J_control,J_vec,pre_comp,pre_comp_n,3);
 
 
-    setpoint->position.x = P_vec[0] + sin(tick*GEOMETRIC_UPDATE_DT);
+    setpoint->position.x = P_vec[0] ;
     setpoint->position.y = P_vec[1];
     setpoint->position.z = circAlt;
 
-    setpoint->velocity.x = 0*V_vec[0] + cos(tick*GEOMETRIC_UPDATE_DT);
-   // setpoint->velocity.y = V_vec[1];
+    setpoint->velocity.x = V_vec[0];
+    setpoint->velocity.y = V_vec[1];
     setpoint->velocity.z = 0.0f;
 
-setpoint->acc.x = -sin(tick*GEOMETRIC_UPDATE_DT);
-   // setpoint->acc.x = A_vec[0];
-   // setpoint->acc.y = A_vec[1];
+
+    setpoint->acc.x = A_vec[0];
+    setpoint->acc.y = A_vec[1];
     setpoint->acc.z = 0.0f;
-setpoint->jerk.x =-cos(tick*GEOMETRIC_UPDATE_DT);
-    //setpoint->jerk.x = J_vec[0];
-    //setpoint->jerk.y = J_vec[1];
+
+    setpoint->jerk.x = J_vec[0];
+    setpoint->jerk.y = J_vec[1];
     setpoint->jerk.z = 0.0f;
 
     setpoint->snap.x = 0.0f;
@@ -131,10 +131,10 @@ void updateTrajectory(setpoint_t* setpoint, const uint32_t tick)
     if(nowTick >= P_control.total_time/GEOMETRIC_UPDATE_DT)
     {
       startTick = tick;
-		//  P_control = *P_control.next;
-		//  diffBezier(&P_control, &V_control);
-		//  diffBezier(&V_control, &A_control);
-		 // diffBezier(&A_control, &J_control);
+		  P_control = *P_control.next;
+		 diffBezier(&P_control, &V_control);
+		 diffBezier(&V_control, &A_control);
+		 diffBezier(&A_control, &J_control);
     }
 
     switch (traj_state) {
