@@ -89,12 +89,13 @@ void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
     float V_vec[3];
     float A_vec[3];
     float J_vec[3];
-    float pre_comp_coef[9];
-    compt_coef (pre_comp_coef,(float)tick*GEOMETRIC_UPDATE_DT,P_control.n,P_control.total_time);
-    compBezier(&P_control,(float)tick*GEOMETRIC_UPDATE_DT,P_vec,pre_comp_coef);
-    //compBezier(&V_control,(float)tick*GEOMETRIC_UPDATE_DT,V_vec,pre_comp_coef);
-   // compBezier(&A_control,(float)tick*GEOMETRIC_UPDATE_DT,A_vec,pre_comp_coef);
-   // compBezier(&J_control,(float)tick*GEOMETRIC_UPDATE_DT,J_vec,pre_comp_coef);
+    float pre_comp[9];
+    float pre_comp_n[9];
+    compt_coef (pre_comp,pre_comp_n,(float)tick*GEOMETRIC_UPDATE_DT,P_control.n,P_control.total_time);
+    compBezier(&P_control,P_vec,pre_comp_coef,0);
+    //compBezier(&V_control,V_vec,pre_comp_coef,1);
+   // compBezier(&A_control,A_vec,pre_comp_coef,2);
+   // compBezier(&J_control,J_vec,pre_comp_coef,3);
 
 
     setpoint->position.x = P_vec[0] + sin(tick*GEOMETRIC_UPDATE_DT);
@@ -161,20 +162,18 @@ float nchoosek (float N, float K){
     return result;
 }
 
-void compBezier (traj* P, float time, float* vec, float* c){
-    int i,n;
-    float coef;
-    float t;
-    t = time/P->total_time;
-    n = P->n;
+void compBezier (traj* P, float* vec, float* c,float*cn,int bias){
+    int i;
+    float coef,l;
     vec[0] = 0.0;
     vec[1] = 0.0;
     vec[2] = 0.0;
             for(i=0;i<=P->n;i++){
-                coef =  nchosk[P->n-6][i]*power2int((1.0f - t), n - i)*c[i];
+
+                coef =  nchosk[P->n-6][i]*cn[i+bias]*c[i];
                 vec[0] = vec[0] + coef*P->Cx[i];
                 vec[1] = vec[1] + coef*P->Cy[i];
-               // vec[2] = vec[2] + coef*P->Cz[i];
+                //vec[2] = vec[2] + coef*P->Cz[i];
             }
 }
 
@@ -189,17 +188,17 @@ void diffBezier(traj* P, traj* V) {
 	}
 }
 
-void compt_coef (float *coef,float time, int n, float ttime){
+void compt_coef (float *coef1,float *coef2,float time, int n, float ttime){
     float t;
-
+    float m;
     t = time /ttime;
-
+    m =(float)n;
     for(int i=0;i<=n;i++){
-     coef[i] =   (power2int(t,i));
-    //    coef[i] = powf((1.0f - t), m - (float)i)* (powf(t,(float)i));
+     coef1[i] =   (power2int(t,i));
+     coef2[i] = power2int((1.0f - t), n - i);
+     //powf((1.0f - t), m - (float)i)* (powf(t,(float)i));
     }
 }
-
 float power2int (float x, int n){
     float number = 1.0f;
    while(n){
