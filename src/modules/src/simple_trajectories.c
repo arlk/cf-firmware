@@ -86,23 +86,23 @@ void trajectoryInit(const uint32_t tick)
 void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
 {
     float P_vec[3];
-    /* float V_vec[3]; */
-    /* float A_vec[3]; */
-    /* float J_vec[3]; */
-     float pre_comp[9]; 
-     float pre_comp_n[9]; 
+     float V_vec[3]; 
+     float A_vec[3]; 
+     float J_vec[3]; 
+    // float pre_comp[9]; 
+     //float pre_comp_n[9]; 
     // compt_coef (pre_comp,pre_comp_n,(float)tick*GEOMETRIC_UPDATE_DT,P_control.n,P_control.total_time); 
      compBezier(&P_control,P_vec,pre_comp,pre_comp_n,0,(float)tick*GEOMETRIC_UPDATE_DT); 
-    //compBezier(&V_control,V_vec,pre_comp,pre_comp_n,1);
-    //compBezier(&A_control,A_vec,pre_comp,pre_comp_n,2);
-    //compBezier(&J_control,J_vec,pre_comp,pre_comp_n,3);
+    compBezier(&V_control,V_vec,pre_comp,pre_comp_n,1,(float)tick*GEOMETRIC_UPDATE_DT);
+    compBezier(&A_control,A_vec,pre_comp,pre_comp_n,2,(float)tick*GEOMETRIC_UPDATE_DT);
+    compBezier(&J_control,J_vec,pre_comp,pre_comp_n,3,(float)tick*GEOMETRIC_UPDATE_DT);
 
 
     setpoint->position.x = P_vec[0] ;
     setpoint->position.y = P_vec[1];
     setpoint->position.z = circAlt;
 
-  /*  setpoint->velocity.x = V_vec[0];
+    setpoint->velocity.x = V_vec[0];
     setpoint->velocity.y = V_vec[1];
     setpoint->velocity.z = 0.0f;
 
@@ -118,7 +118,7 @@ void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
     setpoint->snap.x = 0.0f;
     setpoint->snap.y = 0.0f;
     setpoint->snap.z = 0.0f;
-*/
+
     setpoint->attitude.yaw = 0.0f;
     setpoint->attitudeRate.yaw = 0.0f;
     setpoint->attitudeAcc.yaw = 0.0f;
@@ -132,9 +132,9 @@ void updateTrajectory(setpoint_t* setpoint, const uint32_t tick)
     {
       startTick = tick;
       P_control = *P_control.next;
-      diffBezier(&P_control, &V_control); */
+      diffBezier(&P_control, &V_control); 
       diffBezier(&V_control, &A_control);
-		// diffBezier(&A_control, &J_control);
+	 diffBezier(&A_control, &J_control);
     }
 
     switch (traj_state) {
