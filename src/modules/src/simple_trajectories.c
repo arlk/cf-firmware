@@ -129,8 +129,8 @@ void updateTrajectory(setpoint_t* setpoint, const uint32_t tick)
     if(nowTick >= P_control.total_time/GEOMETRIC_UPDATE_DT)
     {
       startTick = tick;
-		  P_control = *P_control.next;
-		  diffBezier(&P_control, &V_control);
+		//  P_control = *P_control.next;
+		//  diffBezier(&P_control, &V_control);
 		//  diffBezier(&V_control, &A_control);
 		 // diffBezier(&A_control, &J_control);
     }
