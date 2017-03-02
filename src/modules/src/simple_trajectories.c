@@ -92,25 +92,25 @@ void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
     float pre_comp_coef[9];
     compt_coef (pre_comp_coef,(float)tick*GEOMETRIC_UPDATE_DT,P_control.n,P_control.total_time);
     compBezier(&P_control,(float)tick*GEOMETRIC_UPDATE_DT,P_vec,pre_comp_coef);
-    compBezier(&V_control,(float)tick*GEOMETRIC_UPDATE_DT,V_vec,pre_comp_coef);
-    compBezier(&A_control,(float)tick*GEOMETRIC_UPDATE_DT,A_vec,pre_comp_coef);
-    compBezier(&J_control,(float)tick*GEOMETRIC_UPDATE_DT,J_vec,pre_comp_coef);
+    //compBezier(&V_control,(float)tick*GEOMETRIC_UPDATE_DT,V_vec,pre_comp_coef);
+   // compBezier(&A_control,(float)tick*GEOMETRIC_UPDATE_DT,A_vec,pre_comp_coef);
+   // compBezier(&J_control,(float)tick*GEOMETRIC_UPDATE_DT,J_vec,pre_comp_coef);
 
 
     setpoint->position.x = P_vec[0];
     setpoint->position.y = P_vec[1];
     setpoint->position.z = circAlt;
 
-    setpoint->velocity.x = V_vec[0];
-    setpoint->velocity.y = V_vec[1];
+  //  setpoint->velocity.x = V_vec[0];
+   // setpoint->velocity.y = V_vec[1];
     setpoint->velocity.z = 0.0f;
 
-    setpoint->acc.x = A_vec[0];
-    setpoint->acc.y = A_vec[1];
+   // setpoint->acc.x = A_vec[0];
+   // setpoint->acc.y = A_vec[1];
     setpoint->acc.z = 0.0f;
 
-    setpoint->jerk.x = J_vec[0];
-    setpoint->jerk.y = J_vec[1];
+    //setpoint->jerk.x = J_vec[0];
+    //setpoint->jerk.y = J_vec[1];
     setpoint->jerk.z = 0.0f;
 
     setpoint->snap.x = 0.0f;
@@ -126,13 +126,13 @@ void updateTrajectory(setpoint_t* setpoint, const uint32_t tick)
 {
     nowTick = tick - startTick;
 
-    /* if(nowTick >= P_control.total_time/GEOMETRIC_UPDATE_DT){ */
-    if(0){
-      nowTick = 0;
+    if(nowTick >= P_control.total_time/GEOMETRIC_UPDATE_DT)
+    {
+      startTick = tick;
 		  P_control = *P_control.next;
 		  diffBezier(&P_control, &V_control);
-		  diffBezier(&V_control, &A_control);
-		  diffBezier(&A_control, &J_control);
+		//  diffBezier(&V_control, &A_control);
+		 // diffBezier(&A_control, &J_control);
     }
 
     switch (traj_state) {
@@ -173,7 +173,7 @@ void compBezier (traj* P, float time, float* vec, float* c){
                 coef =  nchosk[P->n-6][i]*power2int((1.0f - t), n - i)*c[i];
                 vec[0] = vec[0] + coef*P->Cx[i];
                 vec[1] = vec[1] + coef*P->Cy[i];
-                vec[2] = vec[2] + coef*P->Cz[i];
+               // vec[2] = vec[2] + coef*P->Cz[i];
             }
 }
 
@@ -184,7 +184,7 @@ void diffBezier(traj* P, traj* V) {
 	for (int i = 0; i <= n-1; i++) {
 		V->Cx[i] = n*(P->Cx[i + 1] - P->Cx[i])/V-> total_time;
 		V->Cy[i] = n*(P->Cy[i + 1] - P->Cy[i])/V-> total_time;
-		V->Cz[i] = n*(P->Cz[i + 1] - P->Cz[i])/V-> total_time;
+		//V->Cz[i] = n*(P->Cz[i + 1] - P->Cz[i])/V-> total_time;
 	}
 }
 
@@ -270,9 +270,9 @@ void initBezierTraj(void)
 
 
       P_control = P1;
-   	  diffBezier(&P_control, &V_control);
-   	  diffBezier(&V_control, &A_control);
-   	  diffBezier(&A_control, &J_control);
+   	//  diffBezier(&P_control, &V_control);
+   	 // diffBezier(&V_control, &A_control);
+   	  //diffBezier(&A_control, &J_control);
 
 }
 /* end thiago's mods*/
