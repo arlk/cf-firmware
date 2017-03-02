@@ -90,7 +90,7 @@ void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
     float A_vec[3];
     float J_vec[3];
     float pre_comp_coef[9];
-    compt_coef (pre_comp_coef,(float)tick*DT,P_control.n,P_control.total_time);
+    compt_coef (pre_comp_coef,(float)tick*GEOMETRIC_UPDATE_DT,P_control.n,P_control.total_time);
     compBezier(&P_control,(float)tick*GEOMETRIC_UPDATE_DT,P_vec,pre_comp_coef);
     compBezier(&V_control,(float)tick*GEOMETRIC_UPDATE_DT,V_vec,pre_comp_coef);
     compBezier(&A_control,(float)tick*GEOMETRIC_UPDATE_DT,A_vec,pre_comp_coef);
@@ -190,9 +190,9 @@ void diffBezier(traj* P, traj* V) {
 
 void compt_coef (float *coef,float time, int n, float ttime){
     float t;
-    float m;
+
     t = time /ttime;
-    m =(float)n;
+
     for(int i=0;i<=n;i++){
      coef[i] =   (power2int(t,i));
     //    coef[i] = powf((1.0f - t), m - (float)i)* (powf(t,(float)i));
