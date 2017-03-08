@@ -23,7 +23,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITN I AM GAY ESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -43,7 +43,7 @@
 #include "manipulator.h"
 
 #include "string.h"
-#include "uart2.h"
+#include "uart1.h"
 
 static bool isInit;
 
@@ -54,7 +54,7 @@ void manipulatorInit(void)
   if(isInit)
     return;
 
-  uart2Init(9600);
+  uart1Init(9600);
   xTaskCreate(manipulatorTask, MANIPULATOR_TASK_NAME,
               MANIPULATOR_TASK_STACKSIZE, NULL, MANIPULATOR_TASK_PRI, NULL);
 
@@ -66,8 +66,8 @@ void maestro_set_acceleration(unsigned short device_number,
     unsigned char channel, unsigned short target)
 {
   maestro_uart_protocol(device_number);
-  uart2Putchar(0x09);
-  uart2Putchar(channel);
+  uart1Putchar(0x09);
+  uart1Putchar(channel);
   maestro_send_data(target);
 }
 
@@ -75,21 +75,21 @@ void maestro_set_target(unsigned short device_number,
     unsigned char channel, unsigned short target)
 {
   maestro_uart_protocol(device_number);
-  uart2Putchar(0x09);
-  uart2Putchar(channel);
+  uart1Putchar(0x09);
+  uart1Putchar(channel);
   maestro_send_data(target);
 }
 
 void maestro_uart_protocol(unsigned short device_number)
 {
-  uart2Putchar(0xAA);
-  uart2Putchar(device_number & 0x07F);
+  uart1Putchar(0xAA);
+  uart1Putchar(device_number & 0x07F);
 }
 
 void maestro_send_data(unsigned short target)
 {
-  uart2Putchar(target & 0x7F);
-  uart2Putchar(target >> 7 & 0x7F);
+  uart1Putchar(target & 0x7F);
+  uart1Putchar(target >> 7 & 0x7F);
 }
 
 static void manipulatorTask(void* param)

@@ -37,7 +37,7 @@
 #include "task.h"
 
 #include "pid.h"
-
+#include "manipulator.h"
 #include "sensors.h"
 
 #ifdef ESTIMATOR_TYPE_kalman
@@ -49,23 +49,70 @@
 double pitch_att = &state.attitude.pitch;
 double pitch_rate = &sensorData.gyro.y;
 double pitch_acc;
-double pos;  // servo motor position (rad)
+
+static float servoPidCmd;
+
+
+PidObject pidServo;
+
+///// SERVO ESTIMATOR PID /////
+void servoControllerInit(const float updateDt){
+
+	if(isInit)
+      return;
+
+	pidInit(&pidServoPos, 0, PID_SERVO_KP, PID_SERVO_KI, PID_SERVO_KD, updateDt);
+	pidSetIntegralLimit(&pidServoPos, PID_SERVO_INTEGRATION_LIMIT);
+
+	isInit = true;
+}
+
+
+bool servoControllerTest()
+{
+  return isInit;
+}
+
+
+void servoControllerUpdatePID(float servoPosActual, float servoPosDesired)
+{
+  pidSetDesired(&pidServo, servoPosDesired);
+  servoPidCmd = saturateSignedInt16(pidUpdate(&pidServo, servoPosActual, true));
+}
+
+
+void servoControllerResetAllPID(void)
+{
+  pidReset(&pidServo);
+}
 
 
 
+///// SERVO ESTIMATOR LOOP /////
+void servoEstUpdate(ts,target){
+	static float avis = 0.0f;
+	static float servoAcc = 0.0f;
+	static float servoVel = 0.0f;
+	static float servoPosActual
+
+	avis = -K_VIS*servoVel;
+	servoAcc = servoPidCmd + avis + Marm;
+	servoAcc = servoAccSat(servoAcc,servoAccMax);
+	servoVel += servoAcc*ts;
+	servoPosActual += servoVel*ts;
+	// more coad
+}
+
+
+/////MANIPULATOR DYNAMICS LOOP /////
+void lagrangeDynamics(servoStates,manipStates,payloadMass){
+	// coad
+}
+
+
+///// TOOLS /////
 void pwm2rad(target){
 	//code
 	double target_rad = ((target-500.0)*0.0900)*(PI/180.0);
 }
-
-void servo_pid(target_rad,pos,Tinit){
-	double Ts = 0.01;
-	
-	double e_pitch = target_rad - pos;
-	
-	//code
-}
-
-
-
 

@@ -36,29 +36,20 @@
 
 #include <stdint>
 
+#define K_VIS 65.0f
 
-typedef struct
-{
-  float desired;     //< set point
-  float error;        //< error
-  float prevError;    //< previous error
-  float integ;        //< integral
-  float deriv;        //< derivative
-  float kp;           //< proportional gain
-  float ki;           //< integral gain
-  float kd;           //< derivative gain
-  float outP;         //< proportional output (debugging)
-  float outI;         //< integral output (debugging)
-  float outD;         //< derivative output (debugging)
-  float iLimit;       //< integral limit
-  float iLimitLow;    //< integral limit
-  float dt;           //< delta-time dt
-} PIDObject;
+void servoControllerInit(const float updateDt);
 
+bool servoControllerTest();
 
+void servoControllerUpdatePID(float servoPosActual, float servoPosDesired);
 
+void servoControllerResetAllPID(void);
 
+void servoEstUpdate(ts,target);
 
+void lagrangeDynamics(servoStates,manipStates,payloadMass);
 
+void pwm2rad(target);
 
 #endif /* PID_H_ */

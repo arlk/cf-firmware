@@ -123,7 +123,7 @@ static void joyDecoder(setpoint_t *setpoint, uint8_t type, const void *data, siz
   setpoint->joy.roll = values->roll;
   setpoint->joy.pitch = values->pitch;
   setpoint->joy.yaw = values->yaw;
-  setpoint->joy.throttle = value->throttle;
+  setpoint->joy.throttle = values->throttle;
 }
 
 

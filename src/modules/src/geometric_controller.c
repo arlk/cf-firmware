@@ -43,10 +43,13 @@
 #include "param.h"
 #include "log.h"
 
-static float manip_rollMoment;
-static float manip_pitchMoment;
-static float manip_yawMoment;
+//static float manip_rollMoment;
+//static float manip_pitchMoment;
+//static float manip_yawMoment;
 static float manip_mom_gain = 30000.0f;
+static float test_manip_rollMoment; // Nm
+static float test_manip_pitchMoment = 0.1f; // Nm
+static float test_manip_yawMoment; // Nm
 
 static float k_pos_xy = 0.85f;
 static float k_pos_z = 0.65f;
@@ -230,7 +233,7 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
 
   #else
 
-  thrustOutput = thr_gain*thrustForce;
+  thrustOutput = thr_gain*setpoint->joy.throttle;
 
   #endif
 }
@@ -285,10 +288,10 @@ void geometricMomentController(const rotation_t* rotation,
 
   #ifdef SERIAL_MANIPULATOR
 
-  rollOutput  = saturateSignedInt16(/*mom_gain*rollMoment +*/ manip_mom_gain*manip_rollMoment);
-  //pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*manip_pitchMoment);
-  pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
-  yawOutput   = saturateSignedInt16(/*mom_gain*yawMoment +*/ manip_mom_gain*manip_yawMoment);
+  rollOutput  = saturateSignedInt16(/*mom_gain*rollMoment +*/ manip_mom_gain*test_manip_rollMoment);
+  pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*test_manip_pitchMoment);
+  //pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
+  yawOutput   = saturateSignedInt16(/*mom_gain*yawMoment +*/ manip_mom_gain*test_manip_yawMoment);
   
   #else
   
@@ -337,3 +340,10 @@ PARAM_ADD(PARAM_FLOAT, kv_z, &k_vel_z)
 PARAM_ADD(PARAM_FLOAT, thrust_gain, &thr_gain)
 PARAM_ADD(PARAM_FLOAT, mass, &mass)
 PARAM_GROUP_STOP(geomThrust)
+
+PARAM_GROUP_START(feedforward)
+PARAM_ADD(PARAM_FLOAT, manip_mom_gain, &manip_mom_gain)
+PARAM_ADD(PARAM_FLOAT, test_manip_rollMoment, &test_manip_rollMoment)
+PARAM_ADD(PARAM_FLOAT, test_manip_pitchMoment, &test_manip_pitchMoment)
+PARAM_ADD(PARAM_FLOAT, test_manip_yawMoment, &test_manip_yawMoment)
+PARAM_GROUP_STOP(feedforward)
