@@ -37,6 +37,7 @@
 #include "task.h"
 
 #include "pid.h"
+#include "torque_estimator.h"
 #include "manipulator.h"
 #include "sensors.h"
 
@@ -51,7 +52,6 @@ double pitch_rate = &sensorData.gyro.y;
 double pitch_acc;
 
 static float servoPidCmd;
-
 
 PidObject pidServo;
 
@@ -100,13 +100,26 @@ void servoEstUpdate(ts,target){
 	servoAcc = servoAccSat(servoAcc,servoAccMax);
 	servoVel += servoAcc*ts;
 	servoPosActual += servoVel*ts;
-	// more coad
 }
 
 
-/////MANIPULATOR DYNAMICS LOOP /////
+///// MANIPULATOR DYNAMICS LOOP /////
 void lagrangeDynamics(servoStates,manipStates,payloadMass){
-	// coad
+	static float c1 = cos(theta1);
+	static float c2 = cos(theta2 - theta1);
+	static float s2 = sin(theta2 - theta1);
+	static float c12 = cos(theta2);
+
+	float alpha = IZ_1 + IZ_2 + M_1*pow(R_1,2.0f) + M_2*(pow(L_1,2.0f) + pow(L_2,2.0f));
+	float beta = M_2*L_1*R_2;
+	float delta = IZ_2 + M_2*pow(R_2,2.0f);
+
+	float moment1 = (alpha + 2*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot,
+					+ (-beta*s2*(theta1Dot + theta2Dot))*theta2Dot + (GRAVITY*c1*(M_1*R_1 + M_2*L_2) + M_2*GRAVITY*R_2*c12);
+
+	float moment2 = (delta + beta*c2)*theta1DDot + delta*theta2DDot + (beta*s2*theta1Dot)*theta1Dot;
+
+	static float manipMoment = moment1 + moment2;  /// Total manipulator moment ///
 }
 
 
