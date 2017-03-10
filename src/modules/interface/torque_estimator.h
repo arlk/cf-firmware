@@ -34,7 +34,7 @@
 #ifndef TORQUE_ESTIMATOR_H_
 #define TORQUE_ESTIMATOR_H_
 
-#include <stdint>
+#include <stdint.h>
 
 #define K_VIS 65.0f
 
@@ -57,10 +57,10 @@ void servoControllerUpdatePID(float servoPosActual, float servoPosDesired);
 
 void servoControllerResetAllPID(void);
 
-void servoEstUpdate(ts,target);
+void servoEstUpdate(float ts, float target);
 
-void lagrangeDynamics(servoStates,manipStates,payloadMass);
+void lagrangeDynamics(float servoStates, float manipStates, float payloadMass);
 
-void pwm2rad(target);
+void pwm2rad(float target);
 
 #endif /* PID_H_ */

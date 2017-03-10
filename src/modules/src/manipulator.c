@@ -31,7 +31,10 @@
  *
  * manipulator.c - servo motor controller for serial manipulator
  * */
+#include "manipulator.h"
+
 #include <math.h>
+#include "arm_math.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -39,8 +42,6 @@
 #include "system.h"
 #include "log.h"
 #include "param.h"
-
-#include "manipulator.h"
 
 #include "string.h"
 #include "uart1.h"
@@ -113,8 +114,8 @@ static void manipulatorTask(void* param)
   while(1) {
     vTaskDelayUntil(&lastWakeTime, F2T(RATE_MANIPULATOR_LOOP));
 
-    target0 = (int)(1000.0*sin(5.0*(double)tick/100.0f)+6000.0);
-    target1 = (int)(1000.0*sin(5.0*(double)tick/100.0f)+6000.0);
+    target0 = (int)(1000.0f*arm_sin_f32(5.0f*(float)tick/100.0f)+6000.0f);
+    target1 = (int)(1000.0f*arm_sin_f32(5.0f*(float)tick/100.0f)+6000.0f);
 
     maestro_set_target(12, 0, target0);
     maestro_set_target(12, 1, target1);

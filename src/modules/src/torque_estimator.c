@@ -32,6 +32,7 @@
  * torque_estimator.c - manipulator joint torque estimator
  * */
 #include <math.h>
+#include "arm_math.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -47,13 +48,25 @@
 #include "estimator.h"
 #endif
 
-double pitch_att = &state.attitude.pitch;
-double pitch_rate = &sensorData.gyro.y;
-double pitch_acc;
+//double pitch_att = &state.attitude.pitch;
+//double pitch_rate = &sensorData.gyro.y;
+//double pitch_acc;
 
 static float servoPidCmd;
+static bool isInit = false;
 
 PidObject pidServo;
+
+static inline int16_t saturateSignedInt16(float in)
+{
+  // don't use INT16_MIN, because later we may negate it, which won't work for that value.
+  if (in > INT16_MAX)
+    return INT16_MAX;
+  else if (in < -INT16_MAX)
+    return -INT16_MAX;
+  else
+    return (int16_t)in;
+}
 
 ///// SERVO ESTIMATOR PID /////
 void servoControllerInit(const float updateDt){
@@ -61,8 +74,8 @@ void servoControllerInit(const float updateDt){
 	if(isInit)
       return;
 
-	pidInit(&pidServoPos, 0, PID_SERVO_KP, PID_SERVO_KI, PID_SERVO_KD, updateDt);
-	pidSetIntegralLimit(&pidServoPos, PID_SERVO_INTEGRATION_LIMIT);
+	pidInit(&pidServo, 0, PID_SERVO_KP, PID_SERVO_KI, PID_SERVO_KD, updateDt, 1/updateDt, 1, false);
+	pidSetIntegralLimit(&pidServo, PID_SERVO_INTEGRATION_LIMIT);
 
 	isInit = true;
 }
@@ -77,7 +90,8 @@ bool servoControllerTest()
 void servoControllerUpdatePID(float servoPosActual, float servoPosDesired)
 {
   pidSetDesired(&pidServo, servoPosDesired);
-  servoPidCmd = saturateSignedInt16(pidUpdate(&pidServo, servoPosActual, true));
+  servoPidCmd = saturateSignedInt16(
+  pidUpdate(&pidServo, servoPosActual, true));
 }
 
 
@@ -89,14 +103,14 @@ void servoControllerResetAllPID(void)
 
 
 ///// SERVO ESTIMATOR LOOP /////
-void servoEstUpdate(ts,target){
+void servoEstUpdate(float ts,float target){
 	static float avis = 0.0f;
 	static float servoAcc = 0.0f;
 	static float servoVel = 0.0f;
-	static float servoPosActual
+	static float servoPosActual;
 
 	avis = -K_VIS*servoVel;
-	servoAcc = servoPidCmd + avis + Marm;
+	servoAcc = servoPidCmd + avis;// + lagrangeDynamics(float servoStates, float manipStates);
 	servoAcc = servoAccSat(servoAcc,servoAccMax);
 	servoVel += servoAcc*ts;
 	servoPosActual += servoVel*ts;
@@ -104,27 +118,38 @@ void servoEstUpdate(ts,target){
 
 
 ///// MANIPULATOR DYNAMICS LOOP /////
-void lagrangeDynamics(servoStates,manipStates,payloadMass){
-	static float c1 = cos(theta1);
-	static float c2 = cos(theta2 - theta1);
-	static float s2 = sin(theta2 - theta1);
-	static float c12 = cos(theta2);
-
-	float alpha = IZ_1 + IZ_2 + M_1*pow(R_1,2.0f) + M_2*(pow(L_1,2.0f) + pow(L_2,2.0f));
-	float beta = M_2*L_1*R_2;
-	float delta = IZ_2 + M_2*pow(R_2,2.0f);
-
-	float moment1 = (alpha + 2*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot,
+    float lagrangeDynamics(float servoStates, float manipStates, float payloadMass){
+	static float c1;
+	static float c2;
+	static float s2;
+	static float c12;
+	static float alpha;
+	static float beta;
+	static float delta;
+	static float moment1;
+	static float moment2;
+	
+	c1 = arm_cos_f32(theta1);
+	c2 = arm_cos_f32(theta2 - theta1);
+	s2 = arm_sin_f32(theta2 - theta1);
+	c12 = arm_cos_f32(theta2);
+	
+	alpha = IZ_1 + IZ_2 + M_1*powf(R_1,2.0f) + M_2*(powf(L_1,2.0f) + powf(L_2,2.0f));
+	beta = M_2*L_1*R_2;
+	delta = IZ_2 + M_2*powf(R_2,2.0f);
+	
+	moment1 = (alpha + 2*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot
 					+ (-beta*s2*(theta1Dot + theta2Dot))*theta2Dot + (GRAVITY*c1*(M_1*R_1 + M_2*L_2) + M_2*GRAVITY*R_2*c12);
 
-	float moment2 = (delta + beta*c2)*theta1DDot + delta*theta2DDot + (beta*s2*theta1Dot)*theta1Dot;
+	moment2 = (delta + beta*c2)*theta1DDot + delta*theta2DDot + (beta*s2*theta1Dot)*theta1Dot;
 
-	static float manipMoment = moment1 + moment2;  /// Total manipulator moment ///
+	return moment1 + moment2;  /// Total manipulator moment ///
+
 }
 
 
 ///// TOOLS /////
-void pwm2rad(target){
+void pwm2rad(float target){
 	//code
 	double target_rad = ((target-500.0)*0.0900)*(PI/180.0);
 }
