@@ -48,6 +48,8 @@
 #define R_2 67.77e-3f
 #define GRAVITY -9.80665f
 
+#define SERVO_ACC_MAX 50.0f
+
 
 void servoControllerInit(const float updateDt);
 
@@ -59,8 +61,8 @@ void servoControllerResetAllPID(void);
 
 void servoEstUpdate(float ts, float target);
 
-void lagrangeDynamics(float servoStates, float manipStates, float payloadMass);
+float lagrangeDynamics(float servoStates, float manipStates, float payloadMass);
 
-void pwm2rad(float target);
+float pwm2rad(float target);
 
 #endif /* PID_H_ */

@@ -101,6 +101,26 @@ void servoControllerResetAllPID(void)
 }
 
 
+float servoAccSat(float servoAcc, float servoAccMax)
+{
+	float servoAccSat;
+	// coad
+	if (servoAcc > servoAccMax)
+	{
+		servoAccSat = servoAccMax;
+	}
+	else if (servoAcc < -servoAccMax)
+	{
+		servoAccSat = -servoAccMax;
+	}
+	else
+	{
+		servoAccSat = servoAcc;
+	}
+	return servoAccSat;
+}
+
+
 
 ///// SERVO ESTIMATOR LOOP /////
 void servoEstUpdate(float ts,float target){
@@ -111,7 +131,7 @@ void servoEstUpdate(float ts,float target){
 
 	avis = -K_VIS*servoVel;
 	servoAcc = servoPidCmd + avis;// + lagrangeDynamics(float servoStates, float manipStates);
-	servoAcc = servoAccSat(servoAcc,servoAccMax);
+	servoAcc = servoAccSat(servoAcc,SERVO_ACC_MAX);
 	servoVel += servoAcc*ts;
 	servoPosActual += servoVel*ts;
 }
@@ -128,6 +148,13 @@ void servoEstUpdate(float ts,float target){
 	static float delta;
 	static float moment1;
 	static float moment2;
+	static float theta1;
+	static float theta2;
+	static float theta1Dot;
+	static float theta2Dot;
+	static float theta1DDot;
+	static float theta2DDot;
+
 	
 	c1 = arm_cos_f32(theta1);
 	c2 = arm_cos_f32(theta2 - theta1);
@@ -138,7 +165,7 @@ void servoEstUpdate(float ts,float target){
 	beta = M_2*L_1*R_2;
 	delta = IZ_2 + M_2*powf(R_2,2.0f);
 	
-	moment1 = (alpha + 2*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot
+	moment1 = (alpha + 2.0f*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot
 					+ (-beta*s2*(theta1Dot + theta2Dot))*theta2Dot + (GRAVITY*c1*(M_1*R_1 + M_2*L_2) + M_2*GRAVITY*R_2*c12);
 
 	moment2 = (delta + beta*c2)*theta1DDot + delta*theta2DDot + (beta*s2*theta1Dot)*theta1Dot;
@@ -149,8 +176,9 @@ void servoEstUpdate(float ts,float target){
 
 
 ///// TOOLS /////
-void pwm2rad(float target){
+float pwm2rad(float target){
 	//code
-	double target_rad = ((target-500.0)*0.0900)*(PI/180.0);
+	float target_rad = ((target-500.0f)*0.0900f)*(PI/180.0f);
+	return target_rad;
 }
 
