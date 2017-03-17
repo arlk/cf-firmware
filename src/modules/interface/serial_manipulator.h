@@ -29,10 +29,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * manipulator.h - servo motor controller for serial manipulator
+ * serial_manipulator.h - servo motor controller for serial manipulator
  * */
-#ifndef MANIPULATOR_H_
-#define MANIPULATOR_H_
+#ifndef SERIAL_MANIPULATOR_H_
+#define SERIAL_MANIPULATOR_H_
 
 #define RATE_MANIPULATOR_LOOP 100  // 100 Hz micro maestro rate
 
@@ -49,4 +49,4 @@ void maestro_uart_protocol(unsigned short device_number);
 
 void maestro_send_data(unsigned short target);
 
-#endif /* MANIPULATOR_H_ */
+#endif /* SERIAL_MANIPULATOR_H_ */

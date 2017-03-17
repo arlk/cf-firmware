@@ -44,13 +44,14 @@
 #include "param.h"
 #include "log.h"
 
-//static float manip_rollMoment;
-//static float manip_pitchMoment;
-//static float manip_yawMoment;
+#ifdef SERIAL_MANIP
+
 static float manip_mom_gain = 30000.0f;
 static float test_manip_rollMoment; // Nm
 static float test_manip_pitchMoment = 0.1f; // Nm
 static float test_manip_yawMoment; // Nm
+
+#endif /* SERIAL_MANIP */
 
 static float k_pos_xy = 0.85f;
 static float k_pos_z = 0.65f;
@@ -228,7 +229,7 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
          + (k_pos_z*errPosition[2] + k_vel_z*errVelocity[2]
                 + mass*(GRAVITY + setpoint->acc.z))*state->rotation.vals[2][2];
 
-  #ifdef SERIAL_MANIPULATOR
+  #ifdef SERIAL_MANIP
 
   thrustOutput = thr_gain*thrustForce;
 
@@ -236,7 +237,7 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
 
   thrustOutput = thr_gain*setpoint->joy.throttle;
 
-  #endif
+  #endif /* SERIAL_MANIP */
 }
 
 void geometricMomentController(const rotation_t* rotation,
@@ -287,7 +288,7 @@ void geometricMomentController(const rotation_t* rotation,
               + (-j_xx + j_yy)*sensors->gyro.x*sensors->gyro.y;
 
 
-  #ifdef SERIAL_MANIPULATOR
+  #ifdef SERIAL_MANIP
 
   rollOutput  = saturateSignedInt16(/*mom_gain*rollMoment +*/ manip_mom_gain*test_manip_rollMoment);
   pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*test_manip_pitchMoment);
@@ -301,7 +302,7 @@ void geometricMomentController(const rotation_t* rotation,
   pitchOutput = saturateSignedInt16(mom_gain*pitchMoment);
   yawOutput   = saturateSignedInt16(mom_gain*yawMoment);
 
-  #endif /* SERIAL_MANIPULATOR */
+  #endif /* SERIAL_MANIP */
 }
 
 void geometricControllerGetActuatorOutput(int16_t* roll, int16_t* pitch, int16_t* yaw)
@@ -343,9 +344,13 @@ PARAM_ADD(PARAM_FLOAT, thrust_gain, &thr_gain)
 PARAM_ADD(PARAM_FLOAT, mass, &mass)
 PARAM_GROUP_STOP(geomThrust)
 
+#ifdef SERIAL_MANIP
+
 PARAM_GROUP_START(feedforward)
 PARAM_ADD(PARAM_FLOAT, manip_gain, &manip_mom_gain)
 PARAM_ADD(PARAM_FLOAT, manip_roll, &test_manip_rollMoment)
 PARAM_ADD(PARAM_FLOAT, manip_pitch, &test_manip_pitchMoment)
 PARAM_ADD(PARAM_FLOAT, manip_yaw, &test_manip_yawMoment)
 PARAM_GROUP_STOP(feedforward)
+
+#endif /* SERIAL_MANIP */

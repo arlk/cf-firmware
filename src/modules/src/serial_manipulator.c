@@ -15,7 +15,7 @@
  * Univesity of Illinois at Urbana-Champaign
  * Visit us at http://naira.mechse.illinois.edu/
  *
- * Authored by Robert Mitchell Jones
+ * Authored by Robert Mitchell Jones and Arun Lakshmanan
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +29,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * manipulator.c - servo motor controller for serial manipulator
+ * serial_manipulator.c - servo motor controller for serial manipulator
  * */
-#include "manipulator.h"
+#include "serial_manipulator.h"
 
 #include <math.h>
 #include "arm_math.h"

@@ -25,6 +25,7 @@ PLATFORM					?= CF2
 LPS_TDMA_ENABLE   ?= 0
 LPS_TDOA_ENABLE   ?= 0
 VEH 							?= cf
+MANIP							?=
 
 ######### Vehicle configuration ##########
 include config/$(VEH)/config.mk
@@ -182,7 +183,12 @@ PROJ_OBJ += power_distribution_$(POWER_DISTRIBUTION).o
 PROJ_OBJ += simple_trajectories.o
 
 # Manipulator modules
-PROJ_OBJ += manipulator.o torque_estimator.o
+ifdef MANIP
+PROJ_OBJ += $(MANIP)_manipulator.o
+endif
+ifeq ($(MANIP), SERIAL)
+PROJ_OBJ += torque_estimator.o
+endif
 
 # Deck Core
 PROJ_OBJ_CF2 += deck.o deck_info.o deck_drivers.o deck_test.o
@@ -278,8 +284,12 @@ else
 	endif
 endif
 
-# Custom flags
-FLAGS_CUSTOM = -DSERIAL_MANIP
+# Manipulator flags
+ifeq ($(MANIP), SERIAL)
+FLAGS_CUSTOM = -DSERIAL_MANIP -DENABLE_MANIP
+else ifeq ($(MANIP), DELTA)
+FLAGS_CUSTOM = -DDELTA_MANIP -DENABLE_MANIP
+endif
 
 #Flags required by the ST library
 STFLAGS_CF1 = -DSTM32F10X_MD -DHSE_VALUE=16000000 -include stm32f10x_conf.h -DPLATFORM_CF1
