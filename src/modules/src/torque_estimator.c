@@ -39,7 +39,7 @@
 
 #include "pid.h"
 #include "torque_estimator.h"
-#include "manipulator.h"
+#include "serial_manipulator.h"
 #include "sensors.h"
 
 #ifdef ESTIMATOR_TYPE_kalman
@@ -155,16 +155,16 @@ void servoEstUpdate(float ts,float target){
 	static float theta1DDot;
 	static float theta2DDot;
 
-	
+
 	c1 = arm_cos_f32(theta1);
 	c2 = arm_cos_f32(theta2 - theta1);
 	s2 = arm_sin_f32(theta2 - theta1);
 	c12 = arm_cos_f32(theta2);
-	
+
 	alpha = IZ_1 + IZ_2 + M_1*powf(R_1,2.0f) + M_2*(powf(L_1,2.0f) + powf(L_2,2.0f));
 	beta = M_2*L_1*R_2;
 	delta = IZ_2 + M_2*powf(R_2,2.0f);
-	
+
 	moment1 = (alpha + 2.0f*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot
 					+ (-beta*s2*(theta1Dot + theta2Dot))*theta2Dot + (GRAVITY*c1*(M_1*R_1 + M_2*L_2) + M_2*GRAVITY*R_2*c12);
 

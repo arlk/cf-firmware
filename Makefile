@@ -186,7 +186,7 @@ PROJ_OBJ += simple_trajectories.o
 ifdef MANIP
 PROJ_OBJ += $(MANIP)_manipulator.o
 endif
-ifeq ($(MANIP), SERIAL)
+ifeq ($(MANIP), serial)
 PROJ_OBJ += torque_estimator.o
 endif
 
@@ -285,9 +285,11 @@ else
 endif
 
 # Manipulator flags
-ifeq ($(MANIP), SERIAL)
+ifeq ($(MANIP), serial)
+$(info ************  SERIAL MANIPULATOR ************)
 FLAGS_CUSTOM = -DSERIAL_MANIP -DENABLE_MANIP
-else ifeq ($(MANIP), DELTA)
+else ifeq ($(MANIP), delta)
+$(info ************  DELTA MANIPULATOR ************)
 FLAGS_CUSTOM = -DDELTA_MANIP -DENABLE_MANIP
 endif
 
