@@ -36,7 +36,7 @@ CONTROLLER         ?= geom
 POWER_DISTRIBUTION ?= stock
 SENSORS 					 ?= cf2
 
-######### Test activation ##########
+######### Test activation ##########m
 FATFS_DISKIO_TESTS  ?= 0	# Set to 1 to enable FatFS diskio function tests. Erases card.
 
 ifeq ($(PLATFORM), CF1)
@@ -181,6 +181,9 @@ PROJ_OBJ += power_distribution_$(POWER_DISTRIBUTION).o
 # Trajectory modules
 PROJ_OBJ += simple_trajectories.o
 
+# Manipulator modules
+PROJ_OBJ += manipulator.o torque_estimator.o
+
 # Deck Core
 PROJ_OBJ_CF2 += deck.o deck_info.o deck_drivers.o deck_test.o
 
@@ -275,6 +278,9 @@ else
 	endif
 endif
 
+# Custom flags
+FLAGS_CUSTOM = -DSERIAL_MANIP
+
 #Flags required by the ST library
 STFLAGS_CF1 = -DSTM32F10X_MD -DHSE_VALUE=16000000 -include stm32f10x_conf.h -DPLATFORM_CF1
 STFLAGS_CF2 = -DSTM32F4XX -DSTM32F40_41xxx -DHSE_VALUE=8000000 -DUSE_STDPERIPH_DRIVER -DPLATFORM_CF2
@@ -294,6 +300,7 @@ ifeq ($(USE_ESKYLINK), 1)
   CFLAGS += -DUSE_ESKYLINK
 endif
 
+CFLAGS += $(FLAGS_CUSTOM)
 CFLAGS += -DBOARD_REV_$(REV) -DESTIMATOR_TYPE_$(ESTIMATOR) -DCONTROLLER_TYPE_$(CONTROLLER) -DPOWER_DISTRIBUTION_TYPE_$(POWER_DISTRIBUTION)
 
 CFLAGS += $(PROCESSOR) $(INCLUDES) $(STFLAGS)
