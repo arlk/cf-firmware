@@ -45,8 +45,13 @@
 
 #include "string.h"
 #include "uart1.h"
+#include "config.h"
+#include "sensors.h"
+#include "commander.h"
 
 static bool isInit;
+static setpoint_t setpoint;
+static state_t state;
 
 static void manipulatorTask(void* param);
 
@@ -62,12 +67,11 @@ void manipulatorInit(void)
   isInit = true;
 }
 
-
 void maestro_set_acceleration(unsigned short device_number,
     unsigned char channel, unsigned short target)
 {
   maestro_uart_protocol(device_number);
-  uart1Putchar(0x04);
+  uart1Putchar(0x09);
   uart1Putchar(channel);
   maestro_send_data(target);
 }
@@ -117,19 +121,14 @@ static void manipulatorTask(void* param)
   while(1) {
     vTaskDelayUntil(&lastWakeTime, F2T(RATE_MANIPULATOR_LOOP));
 
-    target0 = (int)(1000.0f*arm_sin_f32(10.0f*(float)tick/100.0f)+6000.0f);
-    target1 = (int)(0.0f*arm_sin_f32(5.0f*(float)tick/100.0f)+6000.0f);
-    
+    commanderGetSetpoint(&setpoint, &state);
+
+    target0 = (int)(2000.0f*setpoint.joy.pitch+6000.0f);
+    target1 = (int)(2000.0f*setpoint.joy.throttle+6000.0f);
+
     maestro_set_target(12, 0, target0);
     maestro_set_target(12, 1, target1);
-
-    /* Test */ 
-    target0 = (int)(50.0f*arm_sin_f32(10.0f*(float)tick/100.0f));
-    uart1Putchar(target0);
 
     tick++;
   }
 }
-
-
-

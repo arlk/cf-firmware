@@ -60,6 +60,7 @@
 #include "buzzer.h"
 #include "sound.h"
 #include "sysload.h"
+#include "manipulator.h"
 
 #ifdef PLATFORM_CF1
 #include "uart_cf1.h"
@@ -171,6 +172,9 @@ void systemTask(void *arg)
   commInit();
   commanderInit();
   stabilizerInit();
+#ifdef SERIAL_MANIP
+  manipulatorInit();
+#endif
 #ifdef PLATFORM_CF2
   deckInit();
   #endif

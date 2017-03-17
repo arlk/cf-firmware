@@ -78,7 +78,6 @@
 #define STABILIZER_TASK_PRI     4
 #define SENSORS_TASK_PRI        4
 #define ADC_TASK_PRI            3
-#define MANIPULATOR_TASK_PRI    2
 #define SYSTEM_TASK_PRI         2
 #define CRTP_TX_TASK_PRI        2
 #define CRTP_RX_TASK_PRI        2
@@ -88,6 +87,7 @@
 #define PARAM_TASK_PRI          1
 #define PROXIMITY_TASK_PRI      0
 #define PM_TASK_PRI             0
+#define MANIPULATOR_TASK_PRI    0
 
 #ifdef PLATFORM_CF2
   #define SYSLINK_TASK_PRI        5
@@ -140,7 +140,7 @@
 #define PARAM_TASK_STACKSIZE          configMINIMAL_STACK_SIZE
 #define SENSORS_TASK_STACKSIZE        (2 * configMINIMAL_STACK_SIZE)
 #define STABILIZER_TASK_STACKSIZE     (3 * configMINIMAL_STACK_SIZE)
-#define MANIPULATOR_TASK_STACKSIZE    configMINIMAL_STACK_SIZE
+#define MANIPULATOR_TASK_STACKSIZE    (2 * configMINIMAL_STACK_SIZE)
 #define NRF24LINK_TASK_STACKSIZE      configMINIMAL_STACK_SIZE
 #define ESKYLINK_TASK_STACKSIZE       configMINIMAL_STACK_SIZE
 #define SYSLINK_TASK_STACKSIZE        configMINIMAL_STACK_SIZE

@@ -285,7 +285,7 @@ void geometricMomentController(const rotation_t* rotation,
               + (j_xx - j_zz)*sensors->gyro.x*sensors->gyro.z;
   yawMoment   = (-k_rot_z*0.5f*errRotation[2] -k_omg_z*errOmega[2])
               + (-j_xx + j_yy)*sensors->gyro.x*sensors->gyro.y;
-  
+
 
   #ifdef SERIAL_MANIPULATOR
 
@@ -294,13 +294,13 @@ void geometricMomentController(const rotation_t* rotation,
   //pitchOutput = saturateSignedInt16( mom_gain*pitchMoment + manip_mom_gain*lagrangeDynamics(servoStates,manipStates,payloadMass) );
   //pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
   yawOutput   = saturateSignedInt16(/*mom_gain*yawMoment +*/ manip_mom_gain*test_manip_yawMoment);
-  
+
   #else
-  
+
   rollOutput  = saturateSignedInt16(mom_gain*rollMoment);
   pitchOutput = saturateSignedInt16(mom_gain*pitchMoment);
   yawOutput   = saturateSignedInt16(mom_gain*yawMoment);
-  
+
   #endif /* SERIAL_MANIPULATOR */
 }
 
@@ -344,8 +344,8 @@ PARAM_ADD(PARAM_FLOAT, mass, &mass)
 PARAM_GROUP_STOP(geomThrust)
 
 PARAM_GROUP_START(feedforward)
-PARAM_ADD(PARAM_FLOAT, manip_mom_gain, &manip_mom_gain)
-PARAM_ADD(PARAM_FLOAT, test_manip_rollMoment, &test_manip_rollMoment)
-PARAM_ADD(PARAM_FLOAT, test_manip_pitchMoment, &test_manip_pitchMoment)
-PARAM_ADD(PARAM_FLOAT, test_manip_yawMoment, &test_manip_yawMoment)
+PARAM_ADD(PARAM_FLOAT, manip_gain, &manip_mom_gain)
+PARAM_ADD(PARAM_FLOAT, manip_roll, &test_manip_rollMoment)
+PARAM_ADD(PARAM_FLOAT, manip_pitch, &test_manip_pitchMoment)
+PARAM_ADD(PARAM_FLOAT, manip_yaw, &test_manip_yawMoment)
 PARAM_GROUP_STOP(feedforward)

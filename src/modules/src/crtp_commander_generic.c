@@ -105,7 +105,7 @@ static void velocityDecoder(setpoint_t *setpoint, uint8_t type, const void *data
 }
 
 
-/* velocityDecoder
+/* joyDecoder
  * Set the Crazyflie velocity in the world coordinate system
  */
 struct joyPacket_s {
