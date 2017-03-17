@@ -38,6 +38,7 @@
 
 #include "geometric_controller.h"
 
+
 #include "arm_math.h"
 #include "flight_math.h"
 #include "param.h"
@@ -290,6 +291,7 @@ void geometricMomentController(const rotation_t* rotation,
 
   rollOutput  = saturateSignedInt16(/*mom_gain*rollMoment +*/ manip_mom_gain*test_manip_rollMoment);
   pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*test_manip_pitchMoment);
+  //pitchOutput = saturateSignedInt16( mom_gain*pitchMoment + manip_mom_gain*lagrangeDynamics(servoStates,manipStates,payloadMass) );
   //pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
   yawOutput   = saturateSignedInt16(/*mom_gain*yawMoment +*/ manip_mom_gain*test_manip_yawMoment);
   

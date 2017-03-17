@@ -67,7 +67,7 @@ void maestro_set_acceleration(unsigned short device_number,
     unsigned char channel, unsigned short target)
 {
   maestro_uart_protocol(device_number);
-  uart1Putchar(0x09);
+  uart1Putchar(0x04);
   uart1Putchar(channel);
   maestro_send_data(target);
 }
@@ -76,7 +76,7 @@ void maestro_set_target(unsigned short device_number,
     unsigned char channel, unsigned short target)
 {
   maestro_uart_protocol(device_number);
-  uart1Putchar(0x09);
+  uart1Putchar(0x04);
   uart1Putchar(channel);
   maestro_send_data(target);
 }
@@ -105,6 +105,9 @@ static void manipulatorTask(void* param)
 
   // Wait for sensors to be calibrated
   lastWakeTime = xTaskGetTickCount ();
+  while(!sensorsAreCalibrated()) {
+    vTaskDelayUntil(&lastWakeTime, F2T(RATE_MANIPULATOR_LOOP));
+  }
 
   int target0, target1 = 6000;
 
@@ -114,11 +117,15 @@ static void manipulatorTask(void* param)
   while(1) {
     vTaskDelayUntil(&lastWakeTime, F2T(RATE_MANIPULATOR_LOOP));
 
-    target0 = (int)(1000.0f*arm_sin_f32(5.0f*(float)tick/100.0f)+6000.0f);
-    target1 = (int)(1000.0f*arm_sin_f32(5.0f*(float)tick/100.0f)+6000.0f);
-
+    target0 = (int)(1000.0f*arm_sin_f32(10.0f*(float)tick/100.0f)+6000.0f);
+    target1 = (int)(0.0f*arm_sin_f32(5.0f*(float)tick/100.0f)+6000.0f);
+    
     maestro_set_target(12, 0, target0);
     maestro_set_target(12, 1, target1);
+
+    /* Test */ 
+    target0 = (int)(50.0f*arm_sin_f32(10.0f*(float)tick/100.0f));
+    uart1Putchar(target0);
 
     tick++;
   }
