@@ -60,7 +60,7 @@ void manipulatorInit(void)
   if(isInit)
     return;
 
-  uart1Init(9600);
+  uart1Init(BAUD_RATE);
   xTaskCreate(manipulatorTask, MANIPULATOR_TASK_NAME,
               MANIPULATOR_TASK_STACKSIZE, NULL, MANIPULATOR_TASK_PRI, NULL);
 
