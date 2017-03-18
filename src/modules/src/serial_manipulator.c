@@ -113,7 +113,7 @@ static void manipulatorTask(void* param)
     vTaskDelayUntil(&lastWakeTime, F2T(RATE_MANIPULATOR_LOOP));
   }
 
-  int target0, target1 = 6000;
+  int target0, target1, target2 = 6000;
 
   //maestro_set_acceleration(12, 0, 4);
   //maestro_set_acceleration(12, 1, 4);
@@ -125,9 +125,11 @@ static void manipulatorTask(void* param)
 
     target0 = (int)(2000.0f*setpoint.joy.pitch+6000.0f);
     target1 = (int)(2000.0f*setpoint.joy.throttle+6000.0f);
+    target2 = (int)(-3000.0f*(float)setpoint.joy.trigger+7000.0f);
 
     maestro_set_target(12, 0, target0);
     maestro_set_target(12, 1, target1);
+    maestro_set_target(12, 2, target2);
 
     tick++;
   }
