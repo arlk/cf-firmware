@@ -96,8 +96,7 @@ void dynamixelEnableTorque(uint8_t motorID, const uint8_t torqueState)
 {
   /* torqueState: 0 <--> 1 */
 
-  dynamixelPacket_s msg;
-  msg = (dynamixelPacket_s) {
+  dynamixelPacket_s msg = (dynamixelPacket_s) {
     .hdr = {0xFF, 0xFF},
     .mID = motorID,
     .len = DELTA_SINGLE_MSG_LEN,
@@ -105,7 +104,6 @@ void dynamixelEnableTorque(uint8_t motorID, const uint8_t torqueState)
     .addr = DELTA_ADDRESS_TORQUE_ENABLE,
     .data = {0}
   };
-
 
   memcpy(&msg.data, &torqueState, sizeof(torqueState));
   calcChksum((uint8_t*)&msg);
@@ -117,8 +115,7 @@ void dynamixelSetLED(uint8_t motorID, uint8_t ledState)
 {
   /* ledState: 0 <--> 1 */
 
-  dynamixelPacket_s msg;
-  msg = (dynamixelPacket_s) {
+  dynamixelPacket_s msg = (dynamixelPacket_s) {
     .hdr = {0xFF, 0xFF},
     .mID = motorID,
     .len = DELTA_SINGLE_MSG_LEN,
