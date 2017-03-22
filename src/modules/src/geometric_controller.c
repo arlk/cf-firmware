@@ -220,7 +220,7 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
          + (k_pos_z*errPosition[2] + k_vel_z*errVelocity[2]
                 + mass*(GRAVITY + setpoint->acc.z))*state->rotation.vals[2][2];
 
-  thrustOutput = thr_gain*setpoint->joy.throttle;
+  thrustOutput = thr_gain*thrustForce;
 }
 
 void geometricMomentController(const rotation_t* rotation,
