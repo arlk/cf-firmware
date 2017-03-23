@@ -231,11 +231,11 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
 
   #ifdef SERIAL_MANIP
 
-  thrustOutput = thr_gain*thrustForce;
+  thrustOutput = thr_gain*setpoint->joy.throttle;
 
   #else
 
-  thrustOutput = thr_gain*setpoint->joy.throttle;
+  thrustOutput = thr_gain*thrustForce;
 
   #endif /* SERIAL_MANIP */
 }

@@ -109,10 +109,11 @@ static void velocityDecoder(setpoint_t *setpoint, uint8_t type, const void *data
  * Set the Crazyflie velocity in the world coordinate system
  */
 struct joyPacket_s {
-  float roll;        // m in the world frame of reference
-  float pitch;        // ...
-  float yaw;        // ...
-  float throttle;  // rad/s
+  float roll;
+  float pitch;
+  float yaw;
+  float throttle;
+  uint8_t trigger;
 } __attribute__((packed));
 static void joyDecoder(setpoint_t *setpoint, uint8_t type, const void *data, size_t datalen)
 {
@@ -124,6 +125,7 @@ static void joyDecoder(setpoint_t *setpoint, uint8_t type, const void *data, siz
   setpoint->joy.pitch = values->pitch;
   setpoint->joy.yaw = values->yaw;
   setpoint->joy.throttle = values->throttle;
+  setpoint->joy.trigger = values->trigger;
 }
 
 

@@ -29,25 +29,50 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * serial_manipulator.h - servo motor controller for serial manipulator
+ * delta_manipulator.h - servo motor controller for delta manipulator
  * */
-#ifndef SERIAL_MANIPULATOR_H_
-#define SERIAL_MANIPULATOR_H_
-
-#define RATE_MANIPULATOR_LOOP 100  // 100 Hz micro maestro rate
-#define BAUD_RATE 9600
+#ifndef DELTA_MANIPULATOR_H_
+#define DELTA_MANIPULATOR_H_
 
 #include <stdbool.h>
 #include <stdint.h>
 
+#define RATE_MANIPULATOR_LOOP 100  // 100 Hz
+#define BAUD_RATE 57142
+
+#define DELTA_BROADCAST_ID 0xfe
+#define DELTA_STATUS_PACKET_LENGTH 0x06
+// Instruction set
+#define DELTA_PING 0x01
+#define DELTA_READ_DATA 0x02
+#define DELTA_WRITE_DATA 0x03
+#define DELTA_REG_WRITE 0x04
+#define DELTA_ACTION 0x05
+#define DELTA_RESET 0x06
+#define DELTA_SYNC_WRITE 0x83
+// Control table
+#define DELTA_ADDRESS_PRESENT_TEMPERATURE 0x2B
+#define DELTA_ADDRESS_GOAL_POSITION 0x1E
+#define DELTA_ADDRESS_LED 0x19
+#define DELTA_ADDRESS_MOVING_SPEED 0x20
+#define DELTA_ADDRESS_RETURN_DELAY_TIME 0x05
+#define DELTA_ADDRESS_MAX_TORQUE 0x0E
+#define DELTA_ADDRESS_TORQUE_ENABLE 0x18
+#define DELTA_ADDRESS_CW_ANGLE_LIMIT 0x06
+#define DELTA_ADDRESS_CCW_ANGLE_LIMIT 0x08
+// Message length
+#define DELTA_STD_LEN 0x04
+#define DELTA_SINGLE_MSG_LEN 0x04
+#define DELTA_DOUBLE_MSG_LEN 0x05
+
 void manipulatorInit(void);
 
-void meastro_set_acceleration(unsigned short device_number, unsigned char channel, unsigned short target);
+void calcChksum(uint8_t* msg);
 
-void meastro_set_target(unsigned short device_number, unsigned char channel, unsigned short target);
+void dynamixelEnableTorque(uint8_t motorID, uint8_t torqueState);
 
-void maestro_uart_protocol(unsigned short device_number);
+void dynamixelSetLED(uint8_t motorID, uint8_t ledState);
 
-void maestro_send_data(unsigned short target);
+void dynamixelMovePosn(uint8_t motorID, uint16_t position);
 
-#endif /* SERIAL_MANIPULATOR_H_ */
+#endif /* DELTA_MANIPULATOR_H_ */
