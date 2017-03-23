@@ -134,8 +134,8 @@ static void manipulatorTask(void* param)
     commanderGetSetpoint(&setpoint, &state);
 
 
+    target0 = (int)(2000.0f*setpoint.joy.pitch+6000.0f);
     target1 = (int)(-2000.0f*setpoint.joy.throttle+6000.0f);
-    target1 = (int)(2000.0f*setpoint.joy.throttle+6000.0f);
     target2 = (int)(-3000.0f*(float)setpoint.joy.trigger+7000.0f);
 
     maestro_set_target(12, 0, target0);
