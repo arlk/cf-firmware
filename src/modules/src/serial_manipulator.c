@@ -49,6 +49,12 @@
 #include "sensors.h"
 #include "commander.h"
 
+#ifdef ESTIMATOR_TYPE_kalman
+#include "estimator_kalman.h"
+#else
+#include "estimator.h"
+#endif
+
 static bool isInit;
 static setpoint_t setpoint;
 static state_t state;
@@ -121,10 +127,14 @@ static void manipulatorTask(void* param)
   while(1) {
     vTaskDelayUntil(&lastWakeTime, F2T(RATE_MANIPULATOR_LOOP));
 
+    //static float pitch_att = &state.attitude.pitch;
+	//static float pitch_rate = &sensorData.gyro.y;
+	//static float pitch_acc;
+
     commanderGetSetpoint(&setpoint, &state);
 
     target0 = (int)(2000.0f*setpoint.joy.pitch+6000.0f);
-    target1 = (int)(2000.0f*setpoint.joy.throttle+6000.0f);
+    target1 = (int)(-2000.0f*setpoint.joy.throttle+6000.0f);
 
     maestro_set_target(12, 0, target0);
     maestro_set_target(12, 1, target1);
