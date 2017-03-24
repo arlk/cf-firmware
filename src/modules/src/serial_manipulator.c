@@ -36,7 +36,10 @@
 #include <math.h>
 #include "arm_math.h"
 
+#include "stm32f4xx.h"
+
 #include "FreeRTOS.h"
+#include "queue.h"
 #include "task.h"
 
 #include "system.h"
@@ -61,14 +64,23 @@ static state_t state;
 
 static void manipulatorTask(void* param);
 
+static int targetAll[3];
+
+static xQueueHandle manipCmdQueue;
+#define MANIP_CMD_QUEUE_LENGTH 10
+
 void manipulatorInit(void)
 {
-  if(isInit)
-    return;
+  if(isInit){
+  	xQueueReset(manipCmdQueue);
+  	return;
+  }
 
   uart1Init(BAUD_RATE);
   xTaskCreate(manipulatorTask, MANIPULATOR_TASK_NAME,
               MANIPULATOR_TASK_STACKSIZE, NULL, MANIPULATOR_TASK_PRI, NULL);
+
+  manipCmdQueue = xQueueCreate(MANIP_CMD_QUEUE_LENGTH,sizeof(targetAll));
 
   isInit = true;
 }
@@ -103,6 +115,24 @@ void maestro_send_data(unsigned short target)
   uart1Putchar(target >> 7 & 0x7F);
 }
 
+static bool serialManipEnqueueCmd(xQueueHandle queue, void *command)
+{
+  portBASE_TYPE result;
+  bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+
+  if (isInInterrupt) {
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+    result = xQueueSendFromISR(queue, command, &xHigherPriorityTaskWoken);
+    if(xHigherPriorityTaskWoken == pdTRUE)
+    {
+      portYIELD();
+    }
+  } else {
+    result = xQueueSend(queue, command, 0);
+  }
+  return (result==pdTRUE);
+}
+
 static void manipulatorTask(void* param)
 {
   uint32_t tick = 0;
@@ -119,7 +149,7 @@ static void manipulatorTask(void* param)
     vTaskDelayUntil(&lastWakeTime, F2T(RATE_MANIPULATOR_LOOP));
   }
 
-  int target0, target1, target2 = 6000;
+  int target0 = 6000, target1 = 6000, target2 = 6000;
 
   //maestro_set_acceleration(12, 0, 4);
   //maestro_set_acceleration(12, 1, 4);
@@ -150,13 +180,18 @@ static void manipulatorTask(void* param)
     else
     {
     	// coad
-    	target0, target1, target2 = 5000;
+    	target0 = 5000, target1 = 5000, target2 = 5000;
     }
     
+    targetAll[0] = target0;
+    targetAll[1] = target1;
+    targetAll[2] = target2;
 
     maestro_set_target(12, 0, target0);
     maestro_set_target(12, 1, target1);
     maestro_set_target(12, 2, target2);
+
+    serialManipEnqueueCmd(manipCmdQueue, (void *)targetAll);
 
     tick++;
   }

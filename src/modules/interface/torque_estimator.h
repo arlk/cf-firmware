@@ -50,16 +50,18 @@
 
 #define SERVO_ACC_MAX 50.0f
 
+#define SERVO_QTY 3
+
 
 void servoControllerInit(const float updateDt);
 
 bool servoControllerTest();
 
-void servoControllerUpdatePID(float servoPosActual, float servoPosDesired);
+int servoControllerUpdatePID(float servoPosActual, float servoPosDesired);
 
 void servoControllerResetAllPID(void);
 
-void servoEstUpdate(float ts, float target);
+void servoEstUpdate(float ts, float target, struct servoStates states);
 
 float lagrangeDynamics(float servoStates, float manipStates, float payloadMass);
 

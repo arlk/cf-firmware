@@ -35,6 +35,7 @@
 #include "arm_math.h"
 
 #include "FreeRTOS.h"
+#include "queue.h"
 #include "task.h"
 
 #include "pid.h"
@@ -56,6 +57,13 @@ static float servoPidCmd;
 static bool isInit = false;
 
 PidObject pidServo;
+
+typedef struct {
+	float acc[SERVO_QTY];
+	float vel[SERVO_QTY];
+	float pos[SERVO_QTY];
+	float load[SERVO_QTY];
+} servoStates;
 
 static inline int16_t saturateSignedInt16(float in)
 {
@@ -87,11 +95,12 @@ bool servoControllerTest()
 }
 
 
-void servoControllerUpdatePID(float servoPosActual, float servoPosDesired)
+int servoControllerUpdatePID(float servoPosActual, float servoPosDesired)
 {
   pidSetDesired(&pidServo, servoPosDesired);
   servoPidCmd = saturateSignedInt16(
   pidUpdate(&pidServo, servoPosActual, true));
+  return servoPidCmd;
 }
 
 
@@ -123,22 +132,19 @@ float servoAccSat(float servoAcc, float servoAccMax)
 
 
 ///// SERVO ESTIMATOR LOOP /////
-void servoEstUpdate(float ts,float target){
-	static float avis = 0.0f;
-	static float servoAcc = 0.0f;
-	static float servoVel = 0.0f;
-	static float servoPosActual;
+void servoEstUpdate(float ts, int servoNumber, float target, struct servoStates states){
+	static float avis;
 
-	avis = -K_VIS*servoVel;
-	servoAcc = servoPidCmd + avis;// + lagrangeDynamics(float servoStates, float manipStates);
-	servoAcc = servoAccSat(servoAcc,SERVO_ACC_MAX);
-	servoVel += servoAcc*ts;
-	servoPosActual += servoVel*ts;
+	avis = -K_VIS*states.vel[servoNumber];
+	states.acc[servoNumber] = avis + servoControllerUpdatePID(states.pos[servoNumber], target);// + lagrangeDynamics(float servoStates, float manipStates);
+	states.acc[servoNumber] = servoAccSat(states.acc[servoNumber],SERVO_ACC_MAX);
+	states.vel[servoNumber] += states.acc[servoNumber]*ts;
+	states.pos[servoNumber] += states.vel[servoNumber]*ts;
 }
 
 
 ///// MANIPULATOR DYNAMICS LOOP /////
-    float lagrangeDynamics(float servoStates, float manipStates, float payloadMass){
+float lagrangeDynamics(float manipStates, float payloadMass){
 	static float c1;
 	static float c2;
 	static float s2;
@@ -155,11 +161,17 @@ void servoEstUpdate(float ts,float target){
 	static float theta1DDot;
 	static float theta2DDot;
 
+	struct servoStates states;
+
+	servoEstUpdate(0.01f, 0, target, 0.0f);
+
 
 	c1 = arm_cos_f32(theta1);
 	c2 = arm_cos_f32(theta2 - theta1);
 	s2 = arm_sin_f32(theta2 - theta1);
 	c12 = arm_cos_f32(theta2);
+
+
 
 	alpha = IZ_1 + IZ_2 + M_1*powf(R_1,2.0f) + M_2*(powf(L_1,2.0f) + powf(L_2,2.0f));
 	beta = M_2*L_1*R_2;
@@ -178,7 +190,7 @@ void servoEstUpdate(float ts,float target){
 ///// TOOLS /////
 float pwm2rad(float target){
 	//code
-	float target_rad = ((target-500.0f)*0.0900f)*(PI/180.0f);
+	float target_rad = ((target-4000.0f)*0.00025f)*(PI);
 	return target_rad;
 }
 
