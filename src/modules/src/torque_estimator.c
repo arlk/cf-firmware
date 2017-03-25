@@ -109,6 +109,12 @@ void servoControllerResetAllPID(void)
   pidReset(&pidServo);
 }
 
+static bool serialManipGetQueueCmd(xQueueHandle queue, void *command)
+{
+	result = xQueueReceive(queue, command, 0);
+	return (result==pdTRUE);
+}
+
 
 float servoAccSat(float servoAcc, float servoAccMax)
 {
@@ -132,9 +138,10 @@ float servoAccSat(float servoAcc, float servoAccMax)
 
 
 ///// SERVO ESTIMATOR LOOP /////
-void servoEstUpdate(float ts, int servoNumber, float target, struct servoStates states){
+void servoEstUpdate(float ts, int servoNumber, struct servoStates states){
 	static float avis;
-
+	static float target;
+	serialManipGetQueueCmd(manipCmdQueue, (void *)target);
 	avis = -K_VIS*states.vel[servoNumber];
 	states.acc[servoNumber] = avis + servoControllerUpdatePID(states.pos[servoNumber], target);// + lagrangeDynamics(float servoStates, float manipStates);
 	states.acc[servoNumber] = servoAccSat(states.acc[servoNumber],SERVO_ACC_MAX);
