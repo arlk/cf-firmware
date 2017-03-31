@@ -132,7 +132,7 @@ void servoEstUpdate(float ts, int servoNumber, servoStates_t* states){
 	float target;
 	serialManipGetQueueCmd(&target);
 	avis = -K_VIS*states->vel[servoNumber];
-	states->acc[servoNumber] = avis + servoControllerUpdatePID(states->pos[servoNumber], target);// + lagrangeDynamics(float servoStates, float manipStates);
+	states->acc[servoNumber] = avis + servoControllerUpdatePID(states->pos[servoNumber], target) + lagrangeDynamics(0.0f);
 	states->acc[servoNumber] = servoAccSat(states->acc[servoNumber],SERVO_ACC_MAX);
 	states->vel[servoNumber] += states->acc[servoNumber]*ts;
 	states->pos[servoNumber] += states->vel[servoNumber]*ts;
@@ -158,17 +158,19 @@ float lagrangeDynamics(float payloadMass){
 	static float theta1DDot;
 	static float theta2DDot;
 
+	float pitchStates[3];
 
 	servoStates_t states;
 
 	servoEstUpdate(0.01f, 0, &states);
+	vehicleGetQueuePitchStates((void *)&pitchStates);
 
-	theta1 = states.pos[1];
-	theta2 = states.pos[2];
-	theta1Dot = states.vel[1];
-	theta2Dot = states.vel[2];
-	theta1DDot = states.acc[1];
-	theta2DDot = states.acc[2];
+	theta1 = states.pos[0] + pitchStates[0];
+	theta2 = states.pos[1] + pitchStates[0];
+	theta1Dot = states.vel[0] + pitchStates[1];
+	theta2Dot = states.vel[1] + pitchStates[1];
+	theta1DDot = states.acc[0] + pitchStates[2];
+	theta2DDot = states.acc[1] + pitchStates[2];
 
 	c1 = arm_cos_f32(theta1);
 	c2 = arm_cos_f32(theta2 - theta1);

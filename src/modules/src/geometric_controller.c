@@ -35,6 +35,8 @@
 #include <stdbool.h>
 
 #include "FreeRTOS.h"
+#include "queue.h"
+#include "stm32f4xx.h"
 
 #include "geometric_controller.h"
 
@@ -83,6 +85,11 @@ static float thrustForce;
 static float errPosition[3];
 static float errVelocity[3];
 
+static float vehiclePitchStates[3];
+
+static xQueueHandle vehicleStatesQueue;
+#define VEH_STATES_QUEUE_LENGTH 10
+
 static bool isInit;
 
 static inline void mat_trans(const arm_matrix_instance_f32 * pSrc, arm_matrix_instance_f32 * pDst)
@@ -109,14 +116,42 @@ static inline int16_t saturateSignedInt16(float in)
 void geometricControllerInit()
 {
   if(isInit)
+    xQueueReset(vehicleStatesQueue);
     return;
 
+  vehicleStatesQueue = xQueueCreate(VEH_STATES_QUEUE_LENGTH,sizeof(vehiclePitchStates));
   isInit = true;
 }
 
 bool geometricControllerTest()
 {
   return isInit;
+}
+
+bool vehicleEnqueuePitchStates(xQueueHandle* queue, void *pitchStates)
+{
+  portBASE_TYPE result;
+  bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+
+  if (isInInterrupt) {
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+    result = xQueueSendFromISR(queue, pitchStates, &xHigherPriorityTaskWoken);
+    if(xHigherPriorityTaskWoken == pdTRUE)
+    {
+      portYIELD();
+    }
+  } else {
+    result = xQueueSend(queue, pitchStates, 0);
+  }
+  return (result==pdTRUE);
+}
+
+
+bool vehicleGetQueuePitchStates(float *pitchStates)
+{
+  portBASE_TYPE result;
+  result = xQueueReceive(vehicleStatesQueue, pitchStates, 0);
+  return (result==pdTRUE);
 }
 
 void geometricControllerGetOmegaDesired(setpoint_t* setpoint)
@@ -287,6 +322,13 @@ void geometricMomentController(const rotation_t* rotation,
               + (j_xx - j_zz)*sensors->gyro.x*sensors->gyro.z;
   yawMoment   = (-k_rot_z*0.5f*errRotation[2] -k_omg_z*errOmega[2])
               + (-j_xx + j_yy)*sensors->gyro.x*sensors->gyro.y;
+
+
+  vehiclePitchStates[0] = 0.0f; //pitch attitude
+  vehiclePitchStates[1] = 0.0f; //pitch rate
+  vehiclePitchStates[2] = 0.0f; //pitch acceleration
+
+  vehicleEnqueuePitchStates(vehicleStatesQueue, (void *)vehiclePitchStates);
 
 
   #ifdef SERIAL_MANIP

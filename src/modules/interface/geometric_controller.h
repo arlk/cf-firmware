@@ -38,6 +38,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "FreeRTOS.h"
+#include "queue.h"
+
 #include "arm_math.h"
 #include "commander.h"
 #include "stabilizer.h"
@@ -52,6 +55,10 @@
 void geometricControllerInit();
 
 bool geometricControllerTest();
+
+bool vehicleEnqueuePitchStates(xQueueHandle* queue, void *pitchStates);
+
+bool vehicleGetQueuePitchStates(float *pitchStates);
 
 void geometricControllerGetAttitudeDesired(const state_t* state,
     setpoint_t* setpoint);

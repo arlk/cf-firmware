@@ -190,7 +190,7 @@ static void manipulatorTask(void* param)
     else
     {
     	// coad
-    	target0 = 5000, target1 = 5000, target2 = 5000;
+    	target0 = 8000, target1 = 8000, target2 = 5000;
     }
     
     targetAll[0] = target0;
