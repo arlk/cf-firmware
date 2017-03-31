@@ -40,7 +40,21 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "FreeRTOS.h"
+#include "queue.h"
+
+typedef struct servoTarget_s{
+	int joint1;
+	int joint2;
+	int gripper;
+} servoTarget_t;
+
+
 void manipulatorInit(void);
+
+bool serialManipEnqueueCmd(xQueueHandle* queue, void *command);
+
+bool serialManipGetQueueCmd(float *command);
 
 void meastro_set_acceleration(unsigned short device_number, unsigned char channel, unsigned short target);
 

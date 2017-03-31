@@ -46,11 +46,17 @@
 #define L_2 0.130f
 #define R_1 43.48e-3f
 #define R_2 67.77e-3f
-#define GRAVITY -9.80665f
 
 #define SERVO_ACC_MAX 50.0f
 
 #define SERVO_QTY 3
+
+typedef struct servoStates_s{
+	float acc[SERVO_QTY];
+	float vel[SERVO_QTY];
+	float pos[SERVO_QTY];
+	float load[SERVO_QTY];
+} servoStates_t;
 
 
 void servoControllerInit(const float updateDt);
@@ -61,9 +67,9 @@ int servoControllerUpdatePID(float servoPosActual, float servoPosDesired);
 
 void servoControllerResetAllPID(void);
 
-void servoEstUpdate(float ts, float target, struct servoStates states);
+void servoEstUpdate(float ts, int servoNumber, servoStates_t* states);
 
-float lagrangeDynamics(float servoStates, float manipStates, float payloadMass);
+float lagrangeDynamics(float payloadMass);
 
 float pwm2rad(float target);
 

@@ -42,6 +42,7 @@
 #include "torque_estimator.h"
 #include "serial_manipulator.h"
 #include "sensors.h"
+#include "geometric_controller.h"
 
 #ifdef ESTIMATOR_TYPE_kalman
 #include "estimator_kalman.h"
@@ -58,12 +59,6 @@ static bool isInit = false;
 
 PidObject pidServo;
 
-typedef struct {
-	float acc[SERVO_QTY];
-	float vel[SERVO_QTY];
-	float pos[SERVO_QTY];
-	float load[SERVO_QTY];
-} servoStates;
 
 static inline int16_t saturateSignedInt16(float in)
 {
@@ -109,12 +104,6 @@ void servoControllerResetAllPID(void)
   pidReset(&pidServo);
 }
 
-static bool serialManipGetQueueCmd(xQueueHandle queue, void *command)
-{
-	result = xQueueReceive(queue, command, 0);
-	return (result==pdTRUE);
-}
-
 
 float servoAccSat(float servoAcc, float servoAccMax)
 {
@@ -138,20 +127,20 @@ float servoAccSat(float servoAcc, float servoAccMax)
 
 
 ///// SERVO ESTIMATOR LOOP /////
-void servoEstUpdate(float ts, int servoNumber, struct servoStates states){
-	static float avis;
-	static float target;
-	serialManipGetQueueCmd(manipCmdQueue, (void *)target);
-	avis = -K_VIS*states.vel[servoNumber];
-	states.acc[servoNumber] = avis + servoControllerUpdatePID(states.pos[servoNumber], target);// + lagrangeDynamics(float servoStates, float manipStates);
-	states.acc[servoNumber] = servoAccSat(states.acc[servoNumber],SERVO_ACC_MAX);
-	states.vel[servoNumber] += states.acc[servoNumber]*ts;
-	states.pos[servoNumber] += states.vel[servoNumber]*ts;
+void servoEstUpdate(float ts, int servoNumber, servoStates_t* states){
+	float avis;
+	float target;
+	serialManipGetQueueCmd(&target);
+	avis = -K_VIS*states->vel[servoNumber];
+	states->acc[servoNumber] = avis + servoControllerUpdatePID(states->pos[servoNumber], target);// + lagrangeDynamics(float servoStates, float manipStates);
+	states->acc[servoNumber] = servoAccSat(states->acc[servoNumber],SERVO_ACC_MAX);
+	states->vel[servoNumber] += states->acc[servoNumber]*ts;
+	states->pos[servoNumber] += states->vel[servoNumber]*ts;
 }
 
 
 ///// MANIPULATOR DYNAMICS LOOP /////
-float lagrangeDynamics(float manipStates, float payloadMass){
+float lagrangeDynamics(float payloadMass){
 	static float c1;
 	static float c2;
 	static float s2;
@@ -161,6 +150,7 @@ float lagrangeDynamics(float manipStates, float payloadMass){
 	static float delta;
 	static float moment1;
 	static float moment2;
+	
 	static float theta1;
 	static float theta2;
 	static float theta1Dot;
@@ -168,10 +158,17 @@ float lagrangeDynamics(float manipStates, float payloadMass){
 	static float theta1DDot;
 	static float theta2DDot;
 
-	struct servoStates states;
 
-	servoEstUpdate(0.01f, 0, target, 0.0f);
+	servoStates_t states;
 
+	servoEstUpdate(0.01f, 0, &states);
+
+	theta1 = states.pos[1];
+	theta2 = states.pos[2];
+	theta1Dot = states.vel[1];
+	theta2Dot = states.vel[2];
+	theta1DDot = states.acc[1];
+	theta2DDot = states.acc[2];
 
 	c1 = arm_cos_f32(theta1);
 	c2 = arm_cos_f32(theta2 - theta1);
@@ -185,7 +182,7 @@ float lagrangeDynamics(float manipStates, float payloadMass){
 	delta = IZ_2 + M_2*powf(R_2,2.0f);
 
 	moment1 = (alpha + 2.0f*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot
-					+ (-beta*s2*(theta1Dot + theta2Dot))*theta2Dot + (GRAVITY*c1*(M_1*R_1 + M_2*L_2) + M_2*GRAVITY*R_2*c12);
+					+ (-beta*s2*(theta1Dot + theta2Dot))*theta2Dot + (-GRAVITY*c1*(M_1*R_1 + M_2*L_2) + M_2*(-GRAVITY)*R_2*c12);
 
 	moment2 = (delta + beta*c2)*theta1DDot + delta*theta2DDot + (beta*s2*theta1Dot)*theta1Dot;
 

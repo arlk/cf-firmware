@@ -32,6 +32,7 @@
  * serial_manipulator.c - servo motor controller for serial manipulator
  * */
 #include "serial_manipulator.h"
+#include "torque_estimator.h"
 
 #include <math.h>
 #include "arm_math.h"
@@ -64,7 +65,7 @@ static state_t state;
 
 static void manipulatorTask(void* param);
 
-static int targetAll[3];
+int targetAll[3];
 
 static xQueueHandle manipCmdQueue;
 #define MANIP_CMD_QUEUE_LENGTH 10
@@ -115,7 +116,7 @@ void maestro_send_data(unsigned short target)
   uart1Putchar(target >> 7 & 0x7F);
 }
 
-static bool serialManipEnqueueCmd(xQueueHandle queue, void *command)
+bool serialManipEnqueueCmd(xQueueHandle* queue, void *command)
 {
   portBASE_TYPE result;
   bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
@@ -132,6 +133,15 @@ static bool serialManipEnqueueCmd(xQueueHandle queue, void *command)
   }
   return (result==pdTRUE);
 }
+
+
+bool serialManipGetQueueCmd(float *command)
+{
+	portBASE_TYPE result;
+	result = xQueueReceive(manipCmdQueue, command, 0);
+	return (result==pdTRUE);
+}
+
 
 static void manipulatorTask(void* param)
 {

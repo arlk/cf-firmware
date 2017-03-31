@@ -45,7 +45,7 @@
 
 #define DEG_TO_RAD (PI/180.0f)
 #define RAD_TO_DEG (180.0f/PI)
-#define GRAVITY 9.81f
+#define GRAVITY 9.80665f
 
 #define GEOMETRIC_UPDATE_DT  (float)(1.0f/ATTITUDE_RATE)
 
