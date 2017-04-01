@@ -35,6 +35,8 @@
 #define TORQUE_ESTIMATOR_H_
 
 #include <stdint.h>
+#include "stabilizer_types.h"
+#include "serial_manipulator.h"
 
 #define K_VIS 65.0f
 
@@ -49,16 +51,6 @@
 
 #define SERVO_ACC_MAX 50.0f
 
-#define SERVO_QTY 3
-
-typedef struct servoStates_s{
-	float acc[SERVO_QTY];
-	float vel[SERVO_QTY];
-	float pos[SERVO_QTY];
-	float load[SERVO_QTY];
-} servoStates_t;
-
-
 void servoControllerInit(const float updateDt);
 
 bool servoControllerTest();
@@ -67,9 +59,11 @@ int servoControllerUpdatePID(float servoPosActual, float servoPosDesired);
 
 void servoControllerResetAllPID(void);
 
-void servoEstUpdate(float ts, int servoNumber, servoStates_t* states);
+void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint);
 
-float lagrangeDynamics(float payloadMass);
+void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, int* targetAll);
+
+float lagrangeDynamics(float payloadMass, servoStates_t* servoStates);
 
 float pwm2rad(float target);
 

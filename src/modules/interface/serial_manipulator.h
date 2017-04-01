@@ -40,6 +40,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "torque_estimator.h"
+
 #include "FreeRTOS.h"
 #include "queue.h"
 
@@ -54,7 +56,9 @@ void manipulatorInit(void);
 
 bool serialManipEnqueueCmd(xQueueHandle* queue, void *command);
 
-bool serialManipGetQueueCmd(float *command);
+bool serialManipGetQueueCmd(void *command);
+
+void servoController(int* targetAll, servoStates_t* servoStates, const state_t* state, setpoint_t* setpoint);
 
 void meastro_set_acceleration(unsigned short device_number, unsigned char channel, unsigned short target);
 

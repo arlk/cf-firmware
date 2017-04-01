@@ -119,7 +119,7 @@ void stateController(control_t *control, setpoint_t *setpoint,
         actuatorThrust = setpoint->thrust;
     }
 
-    geometricMomentController(&state->rotation, sensors, setpoint);
+    geometricMomentController(&state->rotation, sensors, setpoint, state);
 
     geometricControllerGetActuatorOutput(&control->roll,
                                          &control->pitch,

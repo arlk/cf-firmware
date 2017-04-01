@@ -125,22 +125,44 @@ float servoAccSat(float servoAcc, float servoAccMax)
 }
 
 
+void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
+
+	/*
+    target0 = (int)(2000.0f*setpoint.joy.pitch+6000.0f);
+    target1 = (int)(-2000.0f*setpoint.joy.throttle+6000.0f);
+    target2 = (int)(-3000.0f*(float)setpoint.joy.trigger+7000.0f);
+	*/
+
+    
+    if ((float)setpoint->joy.trigger > 0.5f && fabsf(state->attitude.pitch) < 1.0f )
+    {
+    	// coad
+    	targetAll[0] = (int)(-2000.0f*state->attitude.pitch+6000.0f);
+    	targetAll[1] = (int)(2000.0f*state->attitude.pitch+6000.0f);
+    	targetAll[2] = (int)(4000.0f);
+    }
+    else
+    {
+    	// coad
+    	targetAll[0] = 6000, targetAll[1] = 6000, targetAll[2] = 6000;
+    }
+
+}
 
 ///// SERVO ESTIMATOR LOOP /////
-void servoEstUpdate(float ts, int servoNumber, servoStates_t* states){
+void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, int* targetAll){
 	float avis;
-	float target;
-	serialManipGetQueueCmd(&target);
-	avis = -K_VIS*states->vel[servoNumber];
-	states->acc[servoNumber] = avis + servoControllerUpdatePID(states->pos[servoNumber], target) + lagrangeDynamics(0.0f);
-	states->acc[servoNumber] = servoAccSat(states->acc[servoNumber],SERVO_ACC_MAX);
-	states->vel[servoNumber] += states->acc[servoNumber]*ts;
-	states->pos[servoNumber] += states->vel[servoNumber]*ts;
+		
+	avis = -K_VIS*servoStates->vel[servoNumber];
+	servoStates->acc[servoNumber] = avis + servoControllerUpdatePID(servoStates->pos[servoNumber], pwm2rad((float)targetAll[servoNumber]) ) + lagrangeDynamics(0.0f, servoStates);
+	servoStates->acc[servoNumber] = servoAccSat(servoStates->acc[servoNumber],SERVO_ACC_MAX);
+	servoStates->vel[servoNumber] += servoStates->acc[servoNumber]*ts;
+	servoStates->pos[servoNumber] += servoStates->vel[servoNumber]*ts;
 }
 
 
 ///// MANIPULATOR DYNAMICS LOOP /////
-float lagrangeDynamics(float payloadMass){
+float lagrangeDynamics(float payloadMass, servoStates_t* servoStates){
 	static float c1;
 	static float c2;
 	static float s2;
@@ -158,19 +180,13 @@ float lagrangeDynamics(float payloadMass){
 	static float theta1DDot;
 	static float theta2DDot;
 
-	float pitchStates[3];
 
-	servoStates_t states;
-
-	servoEstUpdate(0.01f, 0, &states);
-	vehicleGetQueuePitchStates((void *)&pitchStates);
-
-	theta1 = states.pos[0] + pitchStates[0];
-	theta2 = states.pos[1] + pitchStates[0];
-	theta1Dot = states.vel[0] + pitchStates[1];
-	theta2Dot = states.vel[1] + pitchStates[1];
-	theta1DDot = states.acc[0] + pitchStates[2];
-	theta2DDot = states.acc[1] + pitchStates[2];
+	theta1 = servoStates->pos[0];// + state->attitude.pitch;
+	theta2 = servoStates->pos[1];// + state->attitude.pitch;
+	theta1Dot = servoStates->vel[0];// + sensorData->gyro.x;
+	theta2Dot = servoStates->vel[1];// + sensorData->gyro.x;
+	theta1DDot = servoStates->acc[0] + 0.0f;
+	theta2DDot = servoStates->acc[1] + 0.0f;
 
 	c1 = arm_cos_f32(theta1);
 	c2 = arm_cos_f32(theta2 - theta1);

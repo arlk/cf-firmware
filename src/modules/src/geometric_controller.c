@@ -85,10 +85,10 @@ static float thrustForce;
 static float errPosition[3];
 static float errVelocity[3];
 
-static float vehiclePitchStates[3];
+//static float vehiclePitchStates[3];
 
-static xQueueHandle vehicleStatesQueue;
-#define VEH_STATES_QUEUE_LENGTH 10
+//static xQueueHandle vehicleStatesQueue;
+//#define VEH_STATES_QUEUE_LENGTH 10
 
 static bool isInit;
 
@@ -116,10 +116,10 @@ static inline int16_t saturateSignedInt16(float in)
 void geometricControllerInit()
 {
   if(isInit)
-    xQueueReset(vehicleStatesQueue);
+    //xQueueReset(vehicleStatesQueue);
     return;
 
-  vehicleStatesQueue = xQueueCreate(VEH_STATES_QUEUE_LENGTH,sizeof(vehiclePitchStates));
+  //vehicleStatesQueue = xQueueCreate(VEH_STATES_QUEUE_LENGTH,sizeof(vehiclePitchStates));
   isInit = true;
 }
 
@@ -127,7 +127,7 @@ bool geometricControllerTest()
 {
   return isInit;
 }
-
+/*
 bool vehicleEnqueuePitchStates(xQueueHandle* queue, void *pitchStates)
 {
   portBASE_TYPE result;
@@ -153,7 +153,7 @@ bool vehicleGetQueuePitchStates(float *pitchStates)
   result = xQueueReceive(vehicleStatesQueue, pitchStates, 0);
   return (result==pdTRUE);
 }
-
+*/
 void geometricControllerGetOmegaDesired(setpoint_t* setpoint)
 {
   static float desThrust[3];
@@ -277,7 +277,7 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
 }
 
 void geometricMomentController(const rotation_t* rotation,
-    const sensorData_t *sensors, setpoint_t* setpoint)
+    const sensorData_t *sensors, setpoint_t* setpoint, const state_t* state)
 {
   arm_matrix_instance_f32 Rwb = {3, 3, (float *)rotation->vals};
   arm_matrix_instance_f32 Rwd = {3, 3, (float *)setpoint->rotation.vals};
@@ -323,19 +323,23 @@ void geometricMomentController(const rotation_t* rotation,
   yawMoment   = (-k_rot_z*0.5f*errRotation[2] -k_omg_z*errOmega[2])
               + (-j_xx + j_yy)*sensors->gyro.x*sensors->gyro.y;
 
-
+  /*
   vehiclePitchStates[0] = 0.0f; //pitch attitude
   vehiclePitchStates[1] = 0.0f; //pitch rate
   vehiclePitchStates[2] = 0.0f; //pitch acceleration
-
+  
   vehicleEnqueuePitchStates(vehicleStatesQueue, (void *)vehiclePitchStates);
-
+  */
 
   #ifdef SERIAL_MANIP
+  servoStates_t servoStates;
+  int targetAll[3];
+
+  servoController(targetAll, &servoStates, state, setpoint);
 
   rollOutput  = saturateSignedInt16(/*mom_gain*rollMoment +*/ manip_mom_gain*test_manip_rollMoment);
   //pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*test_manip_pitchMoment);
-  pitchOutput = saturateSignedInt16( mom_gain*pitchMoment + manip_mom_gain*lagrangeDynamics(0.0f) );
+  pitchOutput = saturateSignedInt16( mom_gain*pitchMoment + manip_mom_gain*lagrangeDynamics(0.0f, &servoStates));
   //pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
   yawOutput   = saturateSignedInt16(/*mom_gain*yawMoment +*/ manip_mom_gain*test_manip_yawMoment);
 

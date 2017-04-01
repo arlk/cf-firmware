@@ -47,6 +47,8 @@
 #include "log.h"
 #include "param.h"
 
+//#include "crtp_localization_service.h" ///
+
 #include "string.h"
 #include "uart1.h"
 #include "config.h"
@@ -60,15 +62,18 @@
 #endif
 
 static bool isInit;
-static setpoint_t setpoint;
-static state_t state;
+//static setpoint_t setpoint;
+//static state_t state;
 
-static void manipulatorTask(void* param);
+//static control_t control;
+//static sensorData_t sensorData;
 
-int targetAll[3];
+int targetAll[3] = {6000,6000,6000};
 
 static xQueueHandle manipCmdQueue;
-#define MANIP_CMD_QUEUE_LENGTH 10
+#define MANIP_CMD_QUEUE_LENGTH 1
+
+static void manipulatorTask(void* param);
 
 void manipulatorInit(void)
 {
@@ -135,13 +140,21 @@ bool serialManipEnqueueCmd(xQueueHandle* queue, void *command)
 }
 
 
-bool serialManipGetQueueCmd(float *command)
+bool serialManipGetQueueCmd(void *command)
 {
 	portBASE_TYPE result;
 	result = xQueueReceive(manipCmdQueue, command, 0);
 	return (result==pdTRUE);
 }
 
+void servoController(int* targetAll, servoStates_t* servoStates, const state_t* state, setpoint_t* setpoint){
+
+	servoGetCmd(targetAll, state, setpoint);
+	serialManipEnqueueCmd(manipCmdQueue, (void *)targetAll);
+
+	servoEstUpdate(0.01f, 0, servoStates, targetAll);
+	servoEstUpdate(0.01f, 1, servoStates, targetAll);
+}
 
 static void manipulatorTask(void* param)
 {
@@ -159,8 +172,6 @@ static void manipulatorTask(void* param)
     vTaskDelayUntil(&lastWakeTime, F2T(RATE_MANIPULATOR_LOOP));
   }
 
-  int target0 = 6000, target1 = 6000, target2 = 6000;
-
   //maestro_set_acceleration(12, 0, 4);
   //maestro_set_acceleration(12, 1, 4);
 
@@ -171,37 +182,25 @@ static void manipulatorTask(void* param)
 	//static float pitch_rate = &sensorData.gyro.y;
 	//static float pitch_acc;
 
-    commanderGetSetpoint(&setpoint, &state);
-
     /*
-    target0 = (int)(2000.0f*setpoint.joy.pitch+6000.0f);
-    target1 = (int)(-2000.0f*setpoint.joy.throttle+6000.0f);
-    target2 = (int)(-3000.0f*(float)setpoint.joy.trigger+7000.0f);
-	*/
+	//getExtPosition(&state);
+	#ifdef ESTIMATOR_TYPE_kalman
+    	stateEstimatorUpdate(&state, &sensorData, &control);
+	#else
+    	sensorsAcquire(&sensorData, tick);
+    	stateEstimator(&state, &sensorData, tick);
+	#endif
+    */
 
-    
-    if ((float)setpoint.joy.trigger > 0.5f)
-    {
-    	// coad
-    	target0 = (int)(2000.0f*(float)state.attitude.pitch+6000.0f);
-    	target1 = (int)(2000.0f*(float)state.attitude.pitch+6000.0f);
-    	target2 = (int)(4000.0f);
-    }
-    else
-    {
-    	// coad
-    	target0 = 8000, target1 = 8000, target2 = 5000;
-    }
-    
-    targetAll[0] = target0;
-    targetAll[1] = target1;
-    targetAll[2] = target2;
+    //commanderGetSetpoint(&setpoint, &state);
 
-    maestro_set_target(12, 0, target0);
-    maestro_set_target(12, 1, target1);
-    maestro_set_target(12, 2, target2);
+    serialManipGetQueueCmd(targetAll);
 
-    serialManipEnqueueCmd(manipCmdQueue, (void *)targetAll);
+    maestro_set_target(12, 0, targetAll[0]);
+    maestro_set_target(12, 1, targetAll[1]);
+    maestro_set_target(12, 2, targetAll[2]);
+
+    //serialManipEnqueueCmd(manipCmdQueue, (void *)targetAll);
 
     tick++;
   }

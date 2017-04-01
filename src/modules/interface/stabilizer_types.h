@@ -203,6 +203,17 @@ typedef struct tofMeasurement_s {
   float stdDev;
 } tofMeasurement_t;
 
+
+#define SERVO_QTY 3
+
+typedef struct servoStates_s{
+  float acc[SERVO_QTY];
+  float vel[SERVO_QTY];
+  float pos[SERVO_QTY];
+  float load[SERVO_QTY];
+} servoStates_t;
+
+
 // Frequencies to bo used with the RATE_DO_EXECUTE_HZ macro. Do NOT use an arbitrary number.
 #define RATE_1000_HZ 1000
 #define RATE_500_HZ 500
