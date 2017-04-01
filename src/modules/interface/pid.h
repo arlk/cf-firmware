@@ -104,6 +104,15 @@
 
 #endif
 
+#if defined(SERIAL_MANIP)
+
+#define PID_SERVO_KP  1000.0
+#define PID_SERVO_KI  0.0
+#define PID_SERVO_KD  30.0
+#define PID_SERVO_INTEGRATION_LIMIT   10.0
+
+#endif
+
 typedef struct
 {
   float desired;      //< set point

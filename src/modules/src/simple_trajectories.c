@@ -193,13 +193,10 @@ void diffBezier(traj* P, traj* V) {
 
 void compt_coef (float *coef1,float *coef2,float time, int n, float ttime){
     float t;
-    float m;
     t = time /ttime;
-    m =(float)n;
     for(int i=0;i<=n;i++){
      coef1[i] =   (power2int(t,i));
      coef2[i] = power2int((1.0f - t), n - i);
-     //powf((1.0f - t), m - (float)i)* (powf(t,(float)i));
     }
 }
 float power2int (float x, int n){

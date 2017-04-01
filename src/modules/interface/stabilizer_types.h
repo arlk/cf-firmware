@@ -160,6 +160,7 @@ typedef struct joy_s {
   float pitch;
   float yaw;
   float throttle;
+  uint8_t trigger;
 } joy_t;
 
 typedef struct setpoint_s {

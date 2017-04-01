@@ -60,6 +60,11 @@
 #include "buzzer.h"
 #include "sound.h"
 #include "sysload.h"
+#ifdef SERIAL_MANIP
+#include "serial_manipulator.h"
+#elif DELTA_MANIP
+#include "delta_manipulator.h"
+#endif
 
 #ifdef PLATFORM_CF1
 #include "uart_cf1.h"
@@ -171,6 +176,9 @@ void systemTask(void *arg)
   commInit();
   commanderInit();
   stabilizerInit();
+#ifdef ENABLE_MANIP
+  manipulatorInit();
+#endif
 #ifdef PLATFORM_CF2
   deckInit();
   #endif

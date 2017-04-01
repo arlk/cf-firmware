@@ -25,6 +25,7 @@ PLATFORM					?= CF2
 LPS_TDMA_ENABLE   ?= 0
 LPS_TDOA_ENABLE   ?= 0
 VEH 							?= cf
+MANIP							?=
 
 ######### Vehicle configuration ##########
 include config/$(VEH)/config.mk
@@ -36,7 +37,7 @@ CONTROLLER         ?= geom
 POWER_DISTRIBUTION ?= stock
 SENSORS 					 ?= cf2
 
-######### Test activation ##########
+######### Test activation ##########m
 FATFS_DISKIO_TESTS  ?= 0	# Set to 1 to enable FatFS diskio function tests. Erases card.
 
 ifeq ($(PLATFORM), CF1)
@@ -181,6 +182,14 @@ PROJ_OBJ += power_distribution_$(POWER_DISTRIBUTION).o
 # Trajectory modules
 PROJ_OBJ += simple_trajectories.o
 
+# Manipulator modules
+ifdef MANIP
+PROJ_OBJ += $(MANIP)_manipulator.o
+endif
+ifeq ($(MANIP), serial)
+PROJ_OBJ += torque_estimator.o
+endif
+
 # Deck Core
 PROJ_OBJ_CF2 += deck.o deck_info.o deck_drivers.o deck_test.o
 
@@ -275,6 +284,15 @@ else
 	endif
 endif
 
+# Manipulator flags
+ifeq ($(MANIP), serial)
+$(info ************  SERIAL MANIPULATOR ************)
+FLAGS_CUSTOM = -DSERIAL_MANIP -DENABLE_MANIP
+else ifeq ($(MANIP), delta)
+$(info ************  DELTA MANIPULATOR ************)
+FLAGS_CUSTOM = -DDELTA_MANIP -DENABLE_MANIP
+endif
+
 #Flags required by the ST library
 STFLAGS_CF1 = -DSTM32F10X_MD -DHSE_VALUE=16000000 -include stm32f10x_conf.h -DPLATFORM_CF1
 STFLAGS_CF2 = -DSTM32F4XX -DSTM32F40_41xxx -DHSE_VALUE=8000000 -DUSE_STDPERIPH_DRIVER -DPLATFORM_CF2
@@ -283,7 +301,7 @@ ifeq ($(DEBUG), 1)
   CFLAGS += -O0 -g3 -DDEBUG
 else
 	# Fail on warnings
-  # CFLAGS += -Os -g3 -Werror
+	CFLAGS += -Os -g3 -Werror
 endif
 
 ifeq ($(LTO), 1)
@@ -294,6 +312,7 @@ ifeq ($(USE_ESKYLINK), 1)
   CFLAGS += -DUSE_ESKYLINK
 endif
 
+CFLAGS += $(FLAGS_CUSTOM)
 CFLAGS += -DBOARD_REV_$(REV) -DESTIMATOR_TYPE_$(ESTIMATOR) -DCONTROLLER_TYPE_$(CONTROLLER) -DPOWER_DISTRIBUTION_TYPE_$(POWER_DISTRIBUTION)
 
 CFLAGS += $(PROCESSOR) $(INCLUDES) $(STFLAGS)

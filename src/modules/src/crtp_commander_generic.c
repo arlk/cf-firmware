@@ -60,6 +60,7 @@ typedef void (*packetDecoder_t)(setpoint_t *setpoint, uint8_t type, const void *
 enum packet_type {
   stopType          = 0,
   velocityWorldType = 1,
+  joyPassType = 2
 };
 
 /* ---===== 2 - Decoding functions =====--- */
@@ -104,10 +105,36 @@ static void velocityDecoder(setpoint_t *setpoint, uint8_t type, const void *data
 }
 
 
+/* joyDecoder
+ * Set the Crazyflie velocity in the world coordinate system
+ */
+struct joyPacket_s {
+  float roll;
+  float pitch;
+  float yaw;
+  float throttle;
+  uint8_t trigger;
+} __attribute__((packed));
+static void joyDecoder(setpoint_t *setpoint, uint8_t type, const void *data, size_t datalen)
+{
+  const struct joyPacket_s *values = data;
+
+  ASSERT(datalen == sizeof(struct joyPacket_s));
+
+  setpoint->joy.roll = values->roll;
+  setpoint->joy.pitch = values->pitch;
+  setpoint->joy.yaw = values->yaw;
+  setpoint->joy.throttle = values->throttle;
+  setpoint->joy.trigger = values->trigger;
+}
+
+
+
  /* ---===== 3 - packetDecoders array =====--- */
 const static packetDecoder_t packetDecoders[] = {
   [stopType]          = stopDecoder,
   [velocityWorldType] = velocityDecoder,
+  [joyPassType] = joyDecoder
 };
 
 /* Decoder switch */
