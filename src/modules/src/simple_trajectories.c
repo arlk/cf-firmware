@@ -242,11 +242,11 @@ void initBezierTraj(void)
   P4.n = 9;
   P5.n = 9;
 
-  P1.total_time = 6.8860  ;
-  P2.total_time = 3.1460;
-  P3.total_time = 2.7360 ;
-  P4.total_time = 2.8280  ;
-  P5.total_time =  4.4040;
+  P1.total_time = 2.5*6.8860  ;
+  P2.total_time = 2.5*3.1460;
+  P3.total_time = 2.5*2.7360 ;
+  P4.total_time = 2.5*2.8280  ;
+  P5.total_time =  2.5*4.4040;
   P1.next = &P2;
   P2.next = &P3;
   P3.next = &P4;
