@@ -72,14 +72,14 @@ typedef struct {
      float a = (x0*x0 + y0*y0 + z0*z0 +delta_rf*delta_rf - delta_re*delta_re - y1*y1)/(2*z0);
      float b = (y1-y0)/z0;
      // discriminant
-     float d = -(a+b*y1)*(a+b*y1)+delta_rf*(b*b*delta_rf+delta_rf); 
+     float d = -(a+b*y1)*(a+b*y1)+delta_rf*(b*b*delta_rf+delta_rf);
      if (d < 0) return -1; // non-existing point
      float yj = (y1 - a*b - (float)sqrt(d))/(b*b + 1); // choosing outer point
      float zj = a + b*yj;
      *theta = 180.0f*(float)atan(-zj/(y1 - yj))/pi + ((yj>y1)?180.0f:0.0f);
      return 0;
  }
- 
+
  // inverse kinematics: (x0, y0, z0) -> (theta1, theta2, theta3)
  // returned status: 0=OK, -1=non-existing position
  int delta_calcInverse(float x0, float y0, float z0, float* theta1, float* theta2, float* theta3) {
@@ -188,9 +188,9 @@ static void manipulatorTask(void* param)
   uint32_t lastWakeTime;
   //uint8_t ledState = 0;
   float delta_x, delta_y, delta_z;
-  float* theta1 = 0;
-  float* theta2 = 0;
-  float* theta3 = 0;
+  float theta1 = 0;
+  float theta2 = 0;
+  float theta3 = 0;
 
   vTaskSetApplicationTaskTag(0, (void*)TASK_MANIPULATOR_ID_NBR);
 
@@ -204,21 +204,21 @@ static void manipulatorTask(void* param)
   }
 
   while(1) {
-    vTaskDelayUntil(&lastWakeTime, F2T(5));
+    vTaskDelayUntil(&lastWakeTime, F2T(100));
 
     commanderGetSetpoint(&setpoint, &state);
 
     delta_x = setpoint.joy.roll*DELTA_WORK_X;
     delta_y = setpoint.joy.pitch*DELTA_WORK_Y;
-    delta_z = setpoint.joy.throttle*DELTA_WORK_Z + DELTA_Z_OFFSET;
+    delta_z = (1.0+setpoint.joy.throttle)*DELTA_WORK_Z + DELTA_Z_OFFSET;
 
-    delta_calcInverse(delta_x, delta_y, delta_z, theta1, theta2, theta3);
+    delta_calcInverse(delta_x, delta_y, delta_z, &theta1, &theta2, &theta3);
 
-    dynamixelMovePosn(1, delta_deg2dec(*theta1));
+    dynamixelMovePosn(1, delta_deg2dec(theta1));
     vTaskDelayUntil(&lastWakeTime, F2T(100));
-    dynamixelMovePosn(2, delta_deg2dec(*theta2));
+    dynamixelMovePosn(2, delta_deg2dec(theta2));
     vTaskDelayUntil(&lastWakeTime, F2T(100));
-    dynamixelMovePosn(3, delta_deg2dec(*theta3));
+    dynamixelMovePosn(3, delta_deg2dec(theta3));
     vTaskDelayUntil(&lastWakeTime, F2T(100));
 
 

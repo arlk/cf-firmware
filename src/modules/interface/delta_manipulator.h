@@ -74,8 +74,8 @@
  // trigonometric constants
  #define sqrt3 1.73205080f
  #define pi 3.141592653f    // PI
- #define sin120 (sqrt3/2.0f)   
- #define cos120 -0.5f        
+ #define sin120 (sqrt3/2.0f)
+ #define cos120 -0.5f
  #define tan60 sqrt3
  #define sin30 0.5f
  #define tan30 (1.0f/sqrt3)
@@ -85,10 +85,10 @@
 #define DELTA_MAX_APOS 150.0f*pi/180.0f
 #define DELTA_MIN_APOS -150.0f*pi/180.0f
 // work volume
-#define DELTA_WORK_X 50.0f
-#define DELTA_WORK_Y 50.0f
-#define DELTA_WORK_Z 50.0f
-#define DELTA_Z_OFFSET 75.0f
+#define DELTA_WORK_X 60.0f
+#define DELTA_WORK_Y 60.0f
+#define DELTA_WORK_Z 30.0f
+#define DELTA_Z_OFFSET 100.0f
 
 
 int delta_calcAngleYZ(float x0, float y0, float z0, float* theta);
