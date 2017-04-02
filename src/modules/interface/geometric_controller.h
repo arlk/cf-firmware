@@ -48,6 +48,7 @@
 #define GRAVITY 9.81f
 
 #define GEOMETRIC_UPDATE_DT  (float)(1.0f/ATTITUDE_RATE)
+#define MAIN_LOOP_DT  (float)(1.0f/RATE_MAIN_LOOP)
 
 void geometricControllerInit();
 
