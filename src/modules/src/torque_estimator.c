@@ -127,32 +127,32 @@ float servoAccSat(float servoAcc, float servoAccMax)
 
 void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
 
-	/*
+
     target0 = (int)(2000.0f*setpoint.joy.pitch+6000.0f);
     target1 = (int)(-2000.0f*setpoint.joy.throttle+6000.0f);
     target2 = (int)(-3000.0f*(float)setpoint.joy.trigger+7000.0f);
-	*/
 
-    
-    if ((float)setpoint->joy.trigger > 0.5f && fabsf(state->attitude.pitch) < 1.0f )
-    {
-    	// coad
-    	targetAll[0] = (int)(-2000.0f*state->attitude.pitch+6000.0f);
-    	targetAll[1] = (int)(2000.0f*state->attitude.pitch+6000.0f);
-    	targetAll[2] = (int)(4000.0f);
-    }
-    else
-    {
-    	// coad
-    	targetAll[0] = 6000, targetAll[1] = 6000, targetAll[2] = 6000;
-    }
+
+    /*  */
+    /* if ((float)setpoint->joy.trigger > 0.5f && fabsf(state->attitude.pitch) < 1.0f ) */
+    /* { */
+    /*   // coad */
+    /*   targetAll[0] = (int)(-2000.0f*state->attitude.pitch+6000.0f); */
+    /*   targetAll[1] = (int)(2000.0f*state->attitude.pitch+6000.0f); */
+    /*   targetAll[2] = (int)(4000.0f); */
+    /* } */
+    /* else */
+    /* { */
+    /*   // coad */
+    /*   targetAll[0] = 6000, targetAll[1] = 6000, targetAll[2] = 6000; */
+    /* } */
 
 }
 
 ///// SERVO ESTIMATOR LOOP /////
 void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, int* targetAll){
 	float avis;
-		
+
 	avis = -K_VIS*servoStates->vel[servoNumber];
 	servoStates->acc[servoNumber] = avis + servoControllerUpdatePID(servoStates->pos[servoNumber], pwm2rad((float)targetAll[servoNumber]) ) + lagrangeDynamics(0.0f, servoStates);
 	servoStates->acc[servoNumber] = servoAccSat(servoStates->acc[servoNumber],SERVO_ACC_MAX);
@@ -172,7 +172,7 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates){
 	static float delta;
 	static float moment1;
 	static float moment2;
-	
+
 	static float theta1;
 	static float theta2;
 	static float theta1Dot;
