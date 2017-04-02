@@ -186,7 +186,11 @@ static void manipulatorTask(void* param)
 {
   uint32_t tick = 0;
   uint32_t lastWakeTime;
-  uint8_t ledState = 0;
+  //uint8_t ledState = 0;
+  float delta_x, delta_y, delta_z;
+  float* theta1 = 0;
+  float* theta2 = 0;
+  float* theta3 = 0;
 
   vTaskSetApplicationTaskTag(0, (void*)TASK_MANIPULATOR_ID_NBR);
 
@@ -204,26 +208,19 @@ static void manipulatorTask(void* param)
 
     commanderGetSetpoint(&setpoint, &state);
 
-    ledState = !ledState;
+    delta_x = setpoint.joy.roll*DELTA_WORK_X;
+    delta_y = setpoint.joy.pitch*DELTA_WORK_Y;
+    delta_z = setpoint.joy.throttle*DELTA_WORK_Z + DELTA_Z_OFFSET;
 
-    if (ledState) {
-      dynamixelSetLED(2, 1);
-      vTaskDelayUntil(&lastWakeTime, F2T(100));
-      dynamixelMovePosn(1, 255);
-      vTaskDelayUntil(&lastWakeTime, F2T(100));
-      dynamixelMovePosn(2, 255);
-      vTaskDelayUntil(&lastWakeTime, F2T(100));
-      dynamixelMovePosn(3, 255);
-    }
-    else {
-      dynamixelSetLED(2, 0);
-      vTaskDelayUntil(&lastWakeTime, F2T(100));
-      dynamixelMovePosn(1, 400);
-      vTaskDelayUntil(&lastWakeTime, F2T(100));
-      dynamixelMovePosn(2, 400);
-      vTaskDelayUntil(&lastWakeTime, F2T(100));
-      dynamixelMovePosn(3, 400);
-    }
+    delta_calcInverse(delta_x, delta_y, delta_z, theta1, theta2, theta3);
+
+    dynamixelMovePosn(1, delta_deg2dec(*theta1));
+    vTaskDelayUntil(&lastWakeTime, F2T(100));
+    dynamixelMovePosn(2, delta_deg2dec(*theta2));
+    vTaskDelayUntil(&lastWakeTime, F2T(100));
+    dynamixelMovePosn(3, delta_deg2dec(*theta3));
+    vTaskDelayUntil(&lastWakeTime, F2T(100));
+
 
     tick++;
   }

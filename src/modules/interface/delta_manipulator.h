@@ -85,10 +85,10 @@
 #define DELTA_MAX_APOS 150.0f*pi/180.0f
 #define DELTA_MIN_APOS -150.0f*pi/180.0f
 // work volume
-#define DELTA_WORK_X 50
-#define DELTA_WORK_Y 50
-#define DELTA_WORK_Z 50
-#define DELTA_Z_OFFSET 75
+#define DELTA_WORK_X 50.0f
+#define DELTA_WORK_Y 50.0f
+#define DELTA_WORK_Z 50.0f
+#define DELTA_Z_OFFSET 75.0f
 
 
 int delta_calcAngleYZ(float x0, float y0, float z0, float* theta);
