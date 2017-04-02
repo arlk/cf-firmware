@@ -91,6 +91,12 @@ typedef struct {
  }
 
 
+ uint16_t delta_deg2dec(float theta){
+
+  return (uint16_t)(theta - DELTA_MIN_APOS * (DELTA_MAX_DPOS - DELTA_MIN_DPOS) / (DELTA_MAX_APOS - DELTA_MIN_APOS) + DELTA_MIN_DPOS);
+
+}
+
 
 void manipulatorInit(void)
 {

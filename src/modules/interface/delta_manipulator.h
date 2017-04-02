@@ -71,7 +71,6 @@
  #define delta_f 457.3f     // base
  #define delta_re 232.0f
  #define delta_rf 112.0f
- 
  // trigonometric constants
  #define sqrt3 1.73205080f
  #define pi 3.141592653f    // PI
@@ -80,11 +79,23 @@
  #define tan60 sqrt3
  #define sin30 0.5f
  #define tan30 (1.0f/sqrt3)
+// dynamixel particulars
+#define DELTA_MAX_DPOS 1023.0f
+#define DELTA_MIN_DPOS 0.0f
+#define DELTA_MAX_APOS 150.0f*pi/180.0f
+#define DELTA_MIN_APOS -150.0f*pi/180.0f
+// work volume
+#define DELTA_WORK_X 50
+#define DELTA_WORK_Y 50
+#define DELTA_WORK_Z 50
+#define DELTA_Z_OFFSET 75
 
 
- int delta_calcAngleYZ(float x0, float y0, float z0, float* theta);
+int delta_calcAngleYZ(float x0, float y0, float z0, float* theta);
 
- int delta_calcInverse(float x0, float y0, float z0, float* theta1, float* theta2, float* theta3);
+int delta_calcInverse(float x0, float y0, float z0, float* theta1, float* theta2, float* theta3);
+
+uint16_t delta_deg2dec(float theta);
 
 void manipulatorInit(void);
 
