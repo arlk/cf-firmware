@@ -65,6 +65,27 @@
 #define DELTA_SINGLE_MSG_LEN 0x04
 #define DELTA_DOUBLE_MSG_LEN 0x05
 
+//kinematics stuff
+// robot geometry
+ #define delta_e 115.0f     // end effector
+ #define delta_f 457.3f     // base
+ #define delta_re 232.0f
+ #define delta_rf 112.0f
+ 
+ // trigonometric constants
+ #define sqrt3 1.73205080f
+ #define pi 3.141592653f    // PI
+ #define sin120 (sqrt3/2.0f)   
+ #define cos120 -0.5f        
+ #define tan60 sqrt3
+ #define sin30 0.5f
+ #define tan30 (1.0f/sqrt3)
+
+
+ int delta_calcAngleYZ(float x0, float y0, float z0, float* theta);
+
+ int delta_calcInverse(float x0, float y0, float z0, float* theta1, float* theta2, float* theta3);
+
 void manipulatorInit(void);
 
 void calcChksum(uint8_t* msg);
@@ -74,5 +95,7 @@ void dynamixelEnableTorque(uint8_t motorID, uint8_t torqueState);
 void dynamixelSetLED(uint8_t motorID, uint8_t ledState);
 
 void dynamixelMovePosn(uint8_t motorID, uint16_t position);
+
+
 
 #endif /* DELTA_MANIPULATOR_H_ */
