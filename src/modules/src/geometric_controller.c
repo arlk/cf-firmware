@@ -206,6 +206,44 @@ void geometricControllerGetOmegaDesired(setpoint_t* setpoint)
         + h_w[2]*x_b[2];
 
   setpoint->attitudeRate.yaw = setpoint->attitudeRate.yaw*z_b[2];
+
+  static float crossTemp[3];
+  crossTemp[0] = (-setpoint->attitudeRate.yaw*z_b[1] + setpoint->attitudeRate.pitch*z_b[2])/invForceMagnitude;
+  crossTemp[1] = (setpoint->attitudeRate.yaw*z_b[0] - setpoint->attitudeRate.roll*z_b[2])/invForceMagnitude;
+  crossTemp[2] = (-setpoint->attitudeRate.pitch*z_b[0] + setpoint->attitudeRate.roll*z_b[1])/invForceMagnitude;
+
+  static float crossTempA[3];
+  crossTempA[0] = -setpoint->attitudeRate.yaw*crossTemp[1] + setpoint->attitudeRate.pitch*crossTemp[2];
+  crossTempA[1] = setpoint->attitudeRate.yaw*crossTemp[0] - setpoint->attitudeRate.roll*crossTemp[2];
+  crossTempA[2] = -setpoint->attitudeRate.pitch*crossTemp[0] + setpoint->attitudeRate.roll*crossTemp[1];
+
+  static float forceDDot;
+  forceDDot = z_b[0]*setpoint->snap.x
+        + z_b[1]*setpoint->snap.y
+        + z_b[2]*setpoint->snap.z
+        - z_b[0]*crossTempA[0]
+        - z_b[1]*crossTempA[1]
+        - z_b[2]*crossTempA[2];
+
+  static float crossTempB[3];
+  crossTempB[0] = (-setpoint->attitudeRate.yaw*z_b[1] + setpoint->attitudeRate.pitch*z_b[2])*forceDot;
+  crossTempB[1] = (setpoint->attitudeRate.yaw*z_b[0] - setpoint->attitudeRate.roll*z_b[2])*forceDot;
+  crossTempB[2] = (-setpoint->attitudeRate.pitch*z_b[0] + setpoint->attitudeRate.roll*z_b[1])*forceDot;
+
+  static float h_a[3];
+  h_a[0] = (setpoint->snap.x - forceDDot*z_b[0] - 2*crossTempB[0] - crossTempA[0])*invForceMagnitude;
+  h_a[1] = (setpoint->snap.y - forceDDot*z_b[1] - 2*crossTempB[1] - crossTempA[1])*invForceMagnitude;
+  h_a[2] = (setpoint->snap.z - forceDDot*z_b[2] - 2*crossTempB[2] - crossTempA[2])*invForceMagnitude;
+
+  setpoint->attitudeAcc.roll = -h_a[0]*y_b[0]
+        - h_a[1]*y_b[1]
+        - h_a[2]*y_b[2];
+
+  setpoint->attitudeAcc.pitch = h_a[0]*x_b[0]
+        + h_a[1]*x_b[1]
+        + h_a[2]*x_b[2];
+
+  setpoint->attitudeAcc.yaw = setpoint->attitudeAcc.yaw*z_b[2];
 }
 
 void geometricControllerGetAttitudeDesired(const state_t* state,
@@ -316,12 +354,54 @@ void geometricMomentController(const rotation_t* rotation,
     - desOrientationTransp[2][1]*setpoint->attitudeRate.pitch
     - desOrientationTransp[2][2]*setpoint->attitudeRate.yaw;
 
+  static float hatOmega[3][3] = {{0}};
+  static arm_matrix_instance_f32 hO = {3, 3, (float *)hatOmega};
+  hatOmega[0][1] = -sensors->gyro.z*DEG_TO_RAD;
+  hatOmega[0][2] = sensors->gyro.y*DEG_TO_RAD;
+  hatOmega[1][0] = sensors->gyro.z*DEG_TO_RAD;
+  hatOmega[1][2] = -sensors->gyro.x*DEG_TO_RAD;
+  hatOmega[2][0] = -sensors->gyro.y*DEG_TO_RAD;
+  hatOmega[2][1] = sensors->gyro.x*DEG_TO_RAD;
+
+  static float tempOrientation[3][3];
+  static arm_matrix_instance_f32 tR = {3, 3, (float *)tempOrientation};
+  mat_mult(&hO, &Rdbt, &tR);
+
+  static float orientFeedFwd[3];
+  orientFeedFwd[0] = j_xx*(
+      tempOrientation[0][0]*setpoint->attitudeRate.roll
+    + tempOrientation[0][1]*setpoint->attitudeRate.pitch
+    + tempOrientation[0][2]*setpoint->attitudeRate.yaw
+    - desOrientationTransp[0][0]*setpoint->attitudeAcc.roll
+    - desOrientationTransp[0][1]*setpoint->attitudeAcc.pitch
+    - desOrientationTransp[0][2]*setpoint->attitudeAcc.yaw);
+  orientFeedFwd[1] = j_yy*(
+      tempOrientation[1][0]*setpoint->attitudeRate.roll
+    + tempOrientation[1][1]*setpoint->attitudeRate.pitch
+    + tempOrientation[1][2]*setpoint->attitudeRate.yaw
+    - desOrientationTransp[1][0]*setpoint->attitudeAcc.roll
+    - desOrientationTransp[1][1]*setpoint->attitudeAcc.pitch
+    - desOrientationTransp[1][2]*setpoint->attitudeAcc.yaw);
+  orientFeedFwd[2] = j_zz*(
+      tempOrientation[2][0]*setpoint->attitudeRate.roll
+    + tempOrientation[2][1]*setpoint->attitudeRate.pitch
+    + tempOrientation[2][2]*setpoint->attitudeRate.yaw
+    - desOrientationTransp[2][0]*setpoint->attitudeAcc.roll
+    - desOrientationTransp[2][1]*setpoint->attitudeAcc.pitch
+    - desOrientationTransp[2][2]*setpoint->attitudeAcc.yaw);
+
   rollMoment  = (-k_rot_xy*0.5f*errRotation[0] -k_omg_xy*errOmega[0])
-              + (-j_yy + j_zz)*sensors->gyro.y*sensors->gyro.z;
+              + (-j_yy + j_zz)*sensors->gyro.y*sensors->gyro.z
+              /* - orientFeedFwd[0]; */
+              - 0.0f*orientFeedFwd[0];
   pitchMoment = -(-k_rot_xy*0.5f*errRotation[1] -k_omg_xy*errOmega[1])
-              + (j_xx - j_zz)*sensors->gyro.x*sensors->gyro.z;
+              + (j_xx - j_zz)*sensors->gyro.x*sensors->gyro.z
+              /* - orientFeedFwd[1]; */
+              - 0.0f*orientFeedFwd[1];
   yawMoment   = (-k_rot_z*0.5f*errRotation[2] -k_omg_z*errOmega[2])
-              + (-j_xx + j_yy)*sensors->gyro.x*sensors->gyro.y;
+              + (-j_xx + j_yy)*sensors->gyro.x*sensors->gyro.y
+              /* - orientFeedFwd[2]; */
+              - 0.0f*orientFeedFwd[2];
 
   /*
   vehiclePitchStates[0] = 0.0f; //pitch attitude

@@ -90,6 +90,7 @@ void stateController(control_t *control, setpoint_t *setpoint,
 
       case posMode:
         /* Position Mode */
+        trajectoryDeinit();
         yawFromDesiredYawRate(setpoint);
         geometricControllerGetAttitudeDesired(state, setpoint);
         geometricControllerGetThrustDesired(state, setpoint);
