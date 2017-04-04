@@ -128,9 +128,9 @@ float servoAccSat(float servoAcc, float servoAccMax)
 void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
 
 
-    target0 = (int)(2000.0f*setpoint.joy.pitch+6000.0f);
-    target1 = (int)(-2000.0f*setpoint.joy.throttle+6000.0f);
-    target2 = (int)(-3000.0f*(float)setpoint.joy.trigger+7000.0f);
+    targetAll[0] = (int)(2000.0f*setpoint.joy.pitch+6000.0f);
+    targetAll[1] = (int)(-2000.0f*setpoint.joy.throttle+6000.0f);
+    targetAll[2] = (int)(-3000.0f*(float)setpoint.joy.trigger+7000.0f);
 
 
     /*  */
