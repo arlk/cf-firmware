@@ -31,6 +31,8 @@
  *
  * serial_manipulator.c - servo motor controller for serial manipulator
  * */
+
+#include "t_battery_moving_torque.h"
 #include "serial_manipulator.h"
 #include "torque_estimator.h"
 
@@ -68,7 +70,7 @@ static bool isInit;
 //static control_t control;
 //static sensorData_t sensorData;
 
-int targetAll[3] = {6000,6000,6000};
+int targetAll[4] = {6000,6000,6000,6000};
 
 static xQueueHandle manipCmdQueue;
 #define MANIP_CMD_QUEUE_LENGTH 1
@@ -199,6 +201,7 @@ static void manipulatorTask(void* param)
     maestro_set_target(12, 0, targetAll[0]);
     maestro_set_target(12, 1, targetAll[1]);
     maestro_set_target(12, 2, targetAll[2]);
+    maestro_set_target(12, 3, targetAll[3]);
 
     //serialManipEnqueueCmd(manipCmdQueue, (void *)targetAll);
 

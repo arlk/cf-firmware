@@ -78,7 +78,7 @@ static int16_t yawOutput;
 static float thrustOutput;
 
 static float rollMoment;
-static float pitchMoment;
+float pitchMoment;//extern float pitchMoment;
 static float yawMoment;
 static float thrustForce;
 

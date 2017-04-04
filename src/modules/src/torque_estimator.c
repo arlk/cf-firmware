@@ -38,6 +38,7 @@
 #include "queue.h"
 #include "task.h"
 
+#include "t_battery_moving_torque.h"
 #include "pid.h"
 #include "torque_estimator.h"
 #include "serial_manipulator.h"
@@ -128,9 +129,16 @@ float servoAccSat(float servoAcc, float servoAccMax)
 void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
 
 
-    targetAll[0] = (int)(2000.0f*setpoint.joy.pitch+6000.0f);
-    targetAll[1] = (int)(-2000.0f*setpoint.joy.throttle+6000.0f);
-    targetAll[2] = (int)(-3000.0f*(float)setpoint.joy.trigger+7000.0f);
+    targetAll[0] = (int)(2000.0f*setpoint->joy.pitch+6000.0f);
+    targetAll[1] = (int)(-2000.0f*setpoint->joy.throttle+6000.0f);
+    targetAll[2] = (int)(-3000.0f*(float)setpoint->joy.trigger+7000.0f);
+
+    float tq_get=0,t1=0,t2=0;
+    t1=pwm2rad(targetAll[0]);
+    t2=pwm2rad(targetAll[1]);
+    tq_get=pitchMoment;
+    targetAll[3] = updateBatteryPosition(tq_get,t1,t2); // Need header
+	
 
 
     /*  */

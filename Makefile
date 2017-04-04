@@ -187,7 +187,7 @@ ifdef MANIP
 PROJ_OBJ += $(MANIP)_manipulator.o
 endif
 ifeq ($(MANIP), serial)
-PROJ_OBJ += torque_estimator.o
+PROJ_OBJ += torque_estimator.o t_battery_moving_torque.o
 endif
 
 # Deck Core
