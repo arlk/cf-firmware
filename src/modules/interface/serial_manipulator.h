@@ -35,7 +35,7 @@
 #define SERIAL_MANIPULATOR_H_
 
 #define RATE_MANIPULATOR_LOOP 100  // 100 Hz micro maestro rate
-#define BAUD_RATE 9600
+#define BAUD_RATE 57600
 
 #include <stdbool.h>
 #include <stdint.h>

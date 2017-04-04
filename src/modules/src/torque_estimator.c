@@ -146,13 +146,13 @@ void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
     	// coad
     	targetAll[0] = 6000, targetAll[1] = 6000, targetAll[2] = 6000;
     }
-	
+
 }
 
 ///// SERVO ESTIMATOR LOOP /////
 void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, int* targetAll){
 	float avis;
-		
+
 	avis = -K_VIS*servoStates->vel[servoNumber];
 	servoStates->acc[servoNumber] = avis + servoControllerUpdatePID(servoStates->pos[servoNumber], pwm2rad((float)targetAll[servoNumber]) ) + lagrangeDynamics(0.0f, servoStates);
 	servoStates->acc[servoNumber] = servoAccSat(servoStates->acc[servoNumber],SERVO_ACC_MAX);
@@ -172,7 +172,7 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates){
 	static float delta;
 	static float moment1;
 	static float moment2;
-	
+
 	static float theta1;
 	static float theta2;
 	static float theta1Dot;
