@@ -44,6 +44,8 @@
 #include "sensors.h"
 #include "geometric_controller.h"
 
+#include "complementary_angacc_estimator.h"
+
 #ifdef ESTIMATOR_TYPE_kalman
 #include "estimator_kalman.h"
 #else
@@ -93,8 +95,7 @@ bool servoControllerTest()
 int servoControllerUpdatePID(float servoPosActual, float servoPosDesired)
 {
   pidSetDesired(&pidServo, servoPosDesired);
-  servoPidCmd = saturateSignedInt16(
-  pidUpdate(&pidServo, servoPosActual, true));
+  servoPidCmd = pidUpdate(&pidServo, servoPosActual, true);
   return servoPidCmd;
 }
 
