@@ -94,8 +94,8 @@ void complementaryHsResetAllPID(void)
 float modelPredictiveEstimatorPitchAcc(float Mhat, const state_t *state, const sensorData_t *sensorData){
   // coad
   float qDotHat;
-  qDotHat = ((I_ZZ - I_XX) * sensorData->gyro.x * sensorData->gyro.y + I_ZX * (powf(sensorData->gyro.x,2.0f)
-    - powf(sensorData->gyro.y,2.0f)) ) / I_YY + Mhat / I_YY;
+  qDotHat = ((I_ZZ - I_XX) * sensorData->gyro.x * sensorData->gyro.y + I_ZX * (powf(sensorData->gyro.x, 2.0f)
+    - powf(sensorData->gyro.y, 2.0f)) ) / I_YY + Mhat / I_YY;
   return qDotHat;
 }
 

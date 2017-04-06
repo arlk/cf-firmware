@@ -43,6 +43,14 @@
 #define I_ZZ 0.02f
 #define I_ZX 0.001f
 
+void complementaryHsInit(const float updateDt);
+
+bool complementaryHsTest();
+
+int complementaryHsUpdatePID(float gyroActual, float omegaDotDesired);
+
+void complementaryHsResetAllPID(void);
+
 float modelPredictiveEstimatorPitchAcc(float Mhat, const state_t *state, const sensorData_t *sensorData);
 
 float complementaryAngAccEstimator(state_t *state, const sensorData_t *sensorData);
