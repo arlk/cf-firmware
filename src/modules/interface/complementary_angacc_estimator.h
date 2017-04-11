@@ -51,7 +51,7 @@ float complementaryHsUpdatePID(float gyroActual, float omegaDotDesired);
 
 void complementaryHsResetAllPID(void);
 
-float modelPredictiveEstimatorPitchAcc(float Mhat, const state_t *state, const sensorData_t *sensorData);
+float modelPredictiveEstimatorPitchAcc(const state_t *state, const sensorData_t *sensorData);
 
 void complementaryAngAccEstimator(state_t *state, const sensorData_t *sensorData);
 

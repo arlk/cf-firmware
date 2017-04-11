@@ -407,13 +407,6 @@ void geometricMomentController(const state_t* state,
               /* - orientFeedFwd[2]; */
               - 0.0f*orientFeedFwd[2];
 
-  /*
-  vehiclePitchStates[0] = 0.0f; //pitch attitude
-  vehiclePitchStates[1] = 0.0f; //pitch rate
-  vehiclePitchStates[2] = 0.0f; //pitch acceleration
-  
-  vehicleEnqueuePitchStates(vehicleStatesQueue, (void *)vehiclePitchStates);
-  */
 
   #ifdef SERIAL_MANIP
   servoStates_t servoStates;

@@ -127,6 +127,12 @@ typedef struct angAcc_s {
   float z;
 } angAcc_t;
 
+typedef struct moment_s {
+  float x;
+  float y;
+  float z;
+} moment_t;
+
 typedef struct sensorData_s {
   Axis3f acc;
   Axis3f gyro;
@@ -143,6 +149,7 @@ typedef struct state_s {
   velocity_t velocity;
   acc_t acc;
   angAcc_t angAcc;
+  moment_t moment;
 } state_t;
 
 typedef struct control_s {
