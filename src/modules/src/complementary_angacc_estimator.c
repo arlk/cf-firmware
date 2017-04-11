@@ -39,6 +39,8 @@
 #include "sensors.h"
 #include "pid.h"
 
+#include "geometric_controller.h"
+
 #ifdef ESTIMATOR_TYPE_kalman
 #include "estimator_kalman.h"
 #else
@@ -94,8 +96,8 @@ void complementaryHsResetAllPID(void)
 float modelPredictiveEstimatorPitchAcc(float Mhat, const state_t *state, const sensorData_t *sensorData){
   // coad
   float qDotHat;
-  qDotHat = ((I_ZZ - I_XX) * sensorData->gyro.x * sensorData->gyro.y + I_ZX * (powf(sensorData->gyro.x, 2.0f)
-    - powf(sensorData->gyro.y, 2.0f)) ) / I_YY + Mhat / I_YY;
+  qDotHat = ((I_ZZ - I_XX) * DEG_TO_RAD*sensorData->gyro.x * DEG_TO_RAD*sensorData->gyro.z + I_ZX * (powf(DEG_TO_RAD*sensorData->gyro.z, 2.0f)
+    - powf(DEG_TO_RAD*sensorData->gyro.x, 2.0f)) ) / I_YY + Mhat / I_YY;
   return qDotHat;
 }
 
@@ -104,5 +106,5 @@ void complementaryAngAccEstimator(state_t *state, const sensorData_t *sensorData
 {
   // coad
   //float omegaDotHat;
-  state->angAcc.y = modelPredictiveEstimatorPitchAcc(0.0f, state, sensorData) + complementaryHsUpdatePID(state->angAcc.y, sensorData->gyro.y);
+  state->angAcc.y = modelPredictiveEstimatorPitchAcc(0.0f, state, sensorData) + complementaryHsUpdatePID(state->angAcc.y, DEG_TO_RAD*sensorData->gyro.y);
 } 

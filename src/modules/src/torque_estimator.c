@@ -170,22 +170,22 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
 	static float delta;
 	static float moment1;
 	static float moment2;
-	
+
 	static float theta1;
 	static float theta2;
 	static float theta1Dot;
 	static float theta2Dot;
 	static float theta1DDot;
 	static float theta2DDot;
-	
-	
+
+
 	theta1 = servoStates->pos[0] + state->attitude.pitch;
 	theta2 = servoStates->pos[1] + state->attitude.pitch;
-	theta1Dot = servoStates->vel[0] + sensorData->gyro.y;
-	theta2Dot = servoStates->vel[1] + sensorData->gyro.y;
+	theta1Dot = servoStates->vel[0] + DEG_TO_RAD*sensorData->gyro.y;
+	theta2Dot = servoStates->vel[1] + DEG_TO_RAD*sensorData->gyro.y;
 	theta1DDot = servoStates->acc[0] + state->angAcc.y;
 	theta2DDot = servoStates->acc[1] + state->angAcc.y;
-	
+
 	c1 = arm_cos_f32(theta1);
 	c2 = arm_cos_f32(theta2 - theta1);
 	s2 = arm_sin_f32(theta2 - theta1);
