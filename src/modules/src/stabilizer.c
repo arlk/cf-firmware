@@ -41,6 +41,8 @@
 #include "controller.h"
 #include "power_distribution.h"
 
+#include "complementary_angacc_estimator.h"
+
 #ifdef ESTIMATOR_TYPE_kalman
 #include "estimator_kalman.h"
 #else
@@ -114,7 +116,7 @@ static void stabilizerTask(void* param)
     getExtPosition(&state);
 #ifdef ESTIMATOR_TYPE_kalman
     stateEstimatorUpdate(&state, &sensorData, &control);
-    // coad
+    complementaryAngAccEstimator(&state, &sensorData);
 #else
     sensorsAcquire(&sensorData, tick);
     stateEstimator(&state, &sensorData, tick);

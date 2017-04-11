@@ -46,6 +46,8 @@
 #include "param.h"
 #include "log.h"
 #include "torque_estimator.h"
+#include "complementary_angacc_estimator.h"
+
 
 #ifdef SERIAL_MANIP
 
@@ -119,7 +121,9 @@ void geometricControllerInit()
     //xQueueReset(vehicleStatesQueue);
     return;
 
-  //vehicleStatesQueue = xQueueCreate(VEH_STATES_QUEUE_LENGTH,sizeof(vehiclePitchStates));
+  complementaryHsInit(GEOMETRIC_UPDATE_DT);
+  servoControllerInit(GEOMETRIC_UPDATE_DT);
+    //vehicleStatesQueue = xQueueCreate(VEH_STATES_QUEUE_LENGTH,sizeof(vehiclePitchStates));
   isInit = true;
 }
 
