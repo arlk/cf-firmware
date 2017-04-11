@@ -147,13 +147,13 @@ bool serialManipGetQueueCmd(void *command)
 	return (result==pdTRUE);
 }
 
-void servoController(int* targetAll, servoStates_t* servoStates, const state_t* state, setpoint_t* setpoint){
+void servoController(int* targetAll, servoStates_t* servoStates, const state_t* state, const sensorData_t* sensorData, setpoint_t* setpoint){
 
 	servoGetCmd(targetAll, state, setpoint);
 	serialManipEnqueueCmd(manipCmdQueue, (void *)targetAll);
 
-	servoEstUpdate(0.01f, 0, servoStates, targetAll);
-	servoEstUpdate(0.01f, 1, servoStates, targetAll);
+	servoEstUpdate(0.01f, 0, servoStates, state, sensorData, targetAll);
+	servoEstUpdate(0.01f, 1, servoStates, state, sensorData, targetAll);
 }
 
 static void manipulatorTask(void* param)

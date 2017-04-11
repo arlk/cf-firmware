@@ -61,9 +61,9 @@ void servoControllerResetAllPID(void);
 
 void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint);
 
-void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, int* targetAll);
+void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, const state_t* state, const sensorData_t* sensorData, int* targetAll);
 
-float lagrangeDynamics(float payloadMass, servoStates_t* servoStates);
+float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const state_t* state, const sensorData_t* sensorData);
 
 float pwm2rad(float target);
 

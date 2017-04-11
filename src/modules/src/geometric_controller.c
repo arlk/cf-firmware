@@ -314,10 +314,10 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
   #endif /* SERIAL_MANIP */
 }
 
-void geometricMomentController(const rotation_t* rotation,
-    const sensorData_t *sensors, setpoint_t* setpoint, const state_t* state)
+void geometricMomentController(const state_t* state,
+    const sensorData_t* sensors, setpoint_t* setpoint)
 {
-  arm_matrix_instance_f32 Rwb = {3, 3, (float *)rotation->vals};
+  arm_matrix_instance_f32 Rwb = {3, 3, (float *)state->rotation.vals};
   arm_matrix_instance_f32 Rwd = {3, 3, (float *)setpoint->rotation.vals};
 
   static float rotationDesTransp[3][3];
@@ -415,11 +415,11 @@ void geometricMomentController(const rotation_t* rotation,
   servoStates_t servoStates;
   int targetAll[3];
 
-  servoController(targetAll, &servoStates, state, setpoint);
+  servoController(targetAll, &servoStates, state, sensors, setpoint);
 
   rollOutput  = saturateSignedInt16(/*mom_gain*rollMoment +*/ manip_mom_gain*test_manip_rollMoment);
   //pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*test_manip_pitchMoment);
-  pitchOutput = saturateSignedInt16( mom_gain*pitchMoment + manip_mom_gain*lagrangeDynamics(0.0f, &servoStates));
+  pitchOutput = saturateSignedInt16( mom_gain*pitchMoment + manip_mom_gain*lagrangeDynamics(0.0f, &servoStates, state, sensors));
   //pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
   yawOutput   = saturateSignedInt16(/*mom_gain*yawMoment +*/ manip_mom_gain*test_manip_yawMoment);
 

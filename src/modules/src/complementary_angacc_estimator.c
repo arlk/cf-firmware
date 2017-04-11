@@ -77,7 +77,7 @@ bool complementaryHsTest()
 }
 
 
-int complementaryHsUpdatePID(float gyroActual, float omegaDotDesired)
+float complementaryHsUpdatePID(float gyroActual, float omegaDotDesired)
 {
   pidSetDesired(&pidComplementaryAcc, omegaDotDesired);
   complementaryHsPidCmd = pidUpdate(&pidComplementaryAcc, gyroActual, true);
@@ -100,12 +100,9 @@ float modelPredictiveEstimatorPitchAcc(float Mhat, const state_t *state, const s
 }
 
 
-float complementaryAngAccEstimator(state_t *state, const sensorData_t *sensorData)
+void complementaryAngAccEstimator(state_t *state, const sensorData_t *sensorData)
 {
   // coad
-  float omegaDotHat;
-
-  omegaDotHat = modelPredictiveEstimatorPitchAcc(0.0f, states, sensorData) + complementaryHsUpdatePID(omegaDotHat, sensorData->gyro.y);
-
-  return omegaDotHat;
-}  
+  //float omegaDotHat;
+  state->angAcc.y = modelPredictiveEstimatorPitchAcc(0.0f, state, sensorData) + complementaryHsUpdatePID(state->angAcc.y, sensorData->gyro.y);
+} 

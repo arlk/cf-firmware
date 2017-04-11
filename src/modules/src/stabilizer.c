@@ -114,6 +114,7 @@ static void stabilizerTask(void* param)
     getExtPosition(&state);
 #ifdef ESTIMATOR_TYPE_kalman
     stateEstimatorUpdate(&state, &sensorData, &control);
+    // coad
 #else
     sensorsAcquire(&sensorData, tick);
     stateEstimator(&state, &sensorData, tick);

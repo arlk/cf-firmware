@@ -38,21 +38,21 @@
 #include "stabilizer_types.h"
 #include "pid.h"
 
-#define I_XX 0.01f
-#define I_YY 0.01f
-#define I_ZZ 0.02f
-#define I_ZX 0.001f
+#define I_XX 0.0270f
+#define I_YY 0.0270f
+#define I_ZZ 0.0460f
+#define I_ZX 0.0000f
 
 void complementaryHsInit(const float updateDt);
 
 bool complementaryHsTest();
 
-int complementaryHsUpdatePID(float gyroActual, float omegaDotDesired);
+float complementaryHsUpdatePID(float gyroActual, float omegaDotDesired);
 
 void complementaryHsResetAllPID(void);
 
 float modelPredictiveEstimatorPitchAcc(float Mhat, const state_t *state, const sensorData_t *sensorData);
 
-float complementaryAngAccEstimator(state_t *state, const sensorData_t *sensorData);
+void complementaryAngAccEstimator(state_t *state, const sensorData_t *sensorData);
 
 #endif /* COMPLEMENTARY_ANGACC_ESTIMATOR_H_ */

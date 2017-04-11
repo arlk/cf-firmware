@@ -52,10 +52,6 @@
 #include "estimator.h"
 #endif
 
-//double pitch_att = &state.attitude.pitch;
-//double pitch_rate = &sensorData.gyro.y;
-//double pitch_acc;
-
 static float servoPidCmd;
 static bool isInit = false;
 
@@ -151,11 +147,12 @@ void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
 }
 
 ///// SERVO ESTIMATOR LOOP /////
-void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, int* targetAll){
+void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, const state_t* state, const sensorData_t* sensorData, int* targetAll){
 	float avis;
 
 	avis = -K_VIS*servoStates->vel[servoNumber];
-	servoStates->acc[servoNumber] = avis + servoControllerUpdatePID(servoStates->pos[servoNumber], pwm2rad((float)targetAll[servoNumber]) ) + lagrangeDynamics(0.0f, servoStates);
+	servoStates->acc[servoNumber] = avis + servoControllerUpdatePID(servoStates->pos[servoNumber], pwm2rad((float)targetAll[servoNumber]) )
+		+ lagrangeDynamics(0.0f, servoStates, state, sensorData);
 	servoStates->acc[servoNumber] = servoAccSat(servoStates->acc[servoNumber],SERVO_ACC_MAX);
 	servoStates->vel[servoNumber] += servoStates->acc[servoNumber]*ts;
 	servoStates->pos[servoNumber] += servoStates->vel[servoNumber]*ts;
@@ -163,7 +160,7 @@ void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, int* 
 
 
 ///// MANIPULATOR DYNAMICS LOOP /////
-float lagrangeDynamics(float payloadMass, servoStates_t* servoStates){
+float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const state_t* state, const sensorData_t* sensorData){
 	static float c1;
 	static float c2;
 	static float s2;
@@ -182,12 +179,12 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates){
 	static float theta2DDot;
 
 
-	theta1 = servoStates->pos[0];// + state->attitude.pitch;
-	theta2 = servoStates->pos[1];// + state->attitude.pitch;
-	theta1Dot = servoStates->vel[0];// + sensorData->gyro.x;
-	theta2Dot = servoStates->vel[1];// + sensorData->gyro.x;
-	theta1DDot = servoStates->acc[0] + 0.0f;
-	theta2DDot = servoStates->acc[1] + 0.0f;
+	theta1 = servoStates->pos[0] + state->attitude.pitch;
+	theta2 = servoStates->pos[1] + state->attitude.pitch;
+	theta1Dot = servoStates->vel[0] + sensorData->gyro.y;
+	theta2Dot = servoStates->vel[1] + sensorData->gyro.y;
+	theta1DDot = servoStates->acc[0] + state->angAcc.y;
+	theta2DDot = servoStates->acc[1] + state->angAcc.y;
 
 	c1 = arm_cos_f32(theta1);
 	c2 = arm_cos_f32(theta2 - theta1);

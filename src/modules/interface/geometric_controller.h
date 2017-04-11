@@ -70,8 +70,8 @@ void geometricControllerGetOmegaDesired(setpoint_t* setpoint);
 
 void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpoint);
 
-void geometricMomentController(const rotation_t* rotation,
-    const sensorData_t *sensors, setpoint_t* setpoint, const state_t* state);
+void geometricMomentController(const state_t* state,
+    const sensorData_t* sensors, setpoint_t* setpoint);
 
 void geometricControllerGetActuatorOutput(int16_t* roll, int16_t* pitch, int16_t* yaw);
 
