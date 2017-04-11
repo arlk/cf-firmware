@@ -318,7 +318,7 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
   #endif /* SERIAL_MANIP */
 }
 
-void geometricMomentController(const state_t* state,
+void geometricMomentController(state_t* state,
     const sensorData_t* sensors, setpoint_t* setpoint)
 {
   arm_matrix_instance_f32 Rwb = {3, 3, (float *)state->rotation.vals};
