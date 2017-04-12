@@ -124,13 +124,14 @@ float servoAccSat(float servoAcc, float servoAccMax)
 
 void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
 
-	/*
+	
     targetAll[0] = (int)(2000.0f*setpoint->joy.pitch+6000.0f);
     targetAll[1] = (int)(-2000.0f*setpoint->joy.throttle+6000.0f);
-    targetAll[2] = (int)(-3000.0f*(float)setpoint->joy.trigger+7000.0f);
-	*/
+    targetAll[3] = 4000;
+    //targetAll[2] = (int)(-3000.0f*(float)setpoint->joy.trigger+7000.0f);
+	
 
-    
+    /*
     if ((float)setpoint->joy.trigger > 0.5f && fabsf(state->attitude.pitch) < 1.0f )
     {
     	// coad
@@ -143,7 +144,7 @@ void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
     	// coad
     	targetAll[0] = 6000, targetAll[1] = 6000, targetAll[2] = 6000;
     }
-
+	*/
 }
 
 ///// SERVO ESTIMATOR LOOP /////

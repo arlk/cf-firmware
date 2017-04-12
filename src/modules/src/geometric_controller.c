@@ -414,11 +414,21 @@ void geometricMomentController(state_t* state,
 
   servoController(targetAll, &servoStates, state, sensors, setpoint);
 
-  rollOutput  = saturateSignedInt16(/*mom_gain*rollMoment +*/ manip_mom_gain*test_manip_rollMoment);
-  //pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*test_manip_pitchMoment);
-  pitchOutput = saturateSignedInt16( mom_gain*pitchMoment + manip_mom_gain*lagrangeDynamics(0.0f, &servoStates, state, sensors));
-  //pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
-  yawOutput   = saturateSignedInt16(/*mom_gain*yawMoment +*/ manip_mom_gain*test_manip_yawMoment);
+  if ((float)setpoint->joy.trigger > 0.5f)
+    {
+      // coad
+      rollOutput  = saturateSignedInt16(mom_gain*rollMoment /*+ manip_mom_gain*test_manip_rollMoment*/);
+      //pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*test_manip_pitchMoment);
+      pitchOutput = saturateSignedInt16( mom_gain*pitchMoment + manip_mom_gain*lagrangeDynamics(0.0f, &servoStates, state, sensors));
+      //pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
+      yawOutput   = saturateSignedInt16(mom_gain*yawMoment /*+ manip_mom_gain*test_manip_yawMoment*/);
+    }
+    else
+    {
+      rollOutput  = saturateSignedInt16(mom_gain*rollMoment);
+      pitchOutput = saturateSignedInt16(mom_gain*pitchMoment);
+      yawOutput   = saturateSignedInt16(mom_gain*yawMoment);
+    }
 
   #else
 
