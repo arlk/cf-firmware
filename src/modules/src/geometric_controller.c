@@ -51,7 +51,7 @@
 
 #ifdef SERIAL_MANIP
 
-static float manip_mom_gain = 30000.0f;
+static float manip_mom_gain = 2.0f;
 static float test_manip_rollMoment; // Nm
 static float test_manip_pitchMoment = 0.1f; // Nm
 static float test_manip_yawMoment; // Nm
@@ -307,15 +307,15 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
          + (k_pos_z*errPosition[2] + k_vel_z*errVelocity[2]
                 + mass*(GRAVITY + setpoint->acc.z))*state->rotation.vals[2][2];
 
-  #ifdef SERIAL_MANIP
+  //#ifdef SERIAL_MANIP
 
-  thrustOutput = thr_gain*setpoint->joy.throttle;
+  //thrustOutput = thr_gain*setpoint->joy.throttle;
 
-  #else
+  //#else
 
   thrustOutput = thr_gain*thrustForce;
 
-  #endif /* SERIAL_MANIP */
+  //#endif /* SERIAL_MANIP */
 }
 
 void geometricMomentController(state_t* state,

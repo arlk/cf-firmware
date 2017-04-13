@@ -152,8 +152,8 @@ void servoController(int* targetAll, servoStates_t* servoStates, const state_t* 
 	servoGetCmd(targetAll, state, setpoint);
 	serialManipEnqueueCmd(manipCmdQueue, (void *)targetAll);
 
-	servoEstUpdate(0.01f, 0, servoStates, state, sensorData, targetAll);
-	servoEstUpdate(0.01f, 1, servoStates, state, sensorData, targetAll);
+	servoEstUpdate(0.002f, 0, servoStates, state, sensorData, targetAll);
+	servoEstUpdate(0.002f, 1, servoStates, state, sensorData, targetAll);
 }
 
 static void manipulatorTask(void* param)
@@ -197,7 +197,7 @@ static void manipulatorTask(void* param)
     serialManipGetQueueCmd(targetAll);
 
     maestro_set_target(12, 0, targetAll[0]);
-    maestro_set_target(12, 1, targetAll[1]);
+    maestro_set_target(12, 1, 12000-targetAll[1]);
     maestro_set_target(12, 2, targetAll[2]);
 
     //serialManipEnqueueCmd(manipCmdQueue, (void *)targetAll);

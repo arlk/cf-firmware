@@ -126,8 +126,8 @@ void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
 
 	
     targetAll[0] = (int)(2000.0f*setpoint->joy.pitch+6000.0f);
-    targetAll[1] = (int)(-2000.0f*setpoint->joy.throttle+6000.0f);
-    targetAll[2] = 4000;
+    targetAll[1] = (int)(2000.0f*setpoint->joy.throttle+6000.0f);
+    targetAll[2] = 5000;
     //targetAll[2] = (int)(-3000.0f*(float)setpoint->joy.trigger+7000.0f);
 	
 
@@ -180,12 +180,12 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
 	static float theta2DDot;
 
 
-	theta1 = servoStates->pos[0] + state->attitude.pitch;
-	theta2 = servoStates->pos[1] + state->attitude.pitch;
-	theta1Dot = servoStates->vel[0] + DEG_TO_RAD*sensorData->gyro.y;
-	theta2Dot = servoStates->vel[1] + DEG_TO_RAD*sensorData->gyro.y;
-	theta1DDot = servoStates->acc[0] + state->angAcc.y;
-	theta2DDot = servoStates->acc[1] + state->angAcc.y;
+	theta1 = servoStates->pos[0];// + state->attitude.pitch;
+	theta2 = servoStates->pos[1];// + state->attitude.pitch;
+	theta1Dot = servoStates->vel[0];// + DEG_TO_RAD*sensorData->gyro.y;
+	theta2Dot = servoStates->vel[1];// + DEG_TO_RAD*sensorData->gyro.y;
+	theta1DDot = servoStates->acc[0];// + state->angAcc.y;
+	theta2DDot = servoStates->acc[1];// + state->angAcc.y;
 
 	c1 = arm_cos_f32(theta1);
 	c2 = arm_cos_f32(theta2 - theta1);
