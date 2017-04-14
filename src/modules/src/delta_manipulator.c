@@ -186,7 +186,7 @@ static void manipulatorTask(void* param)
 {
   uint32_t tick = 0;
   uint32_t lastWakeTime;
-  //uint8_t ledState = 0;
+  uint8_t ledState = 1;
   float delta_x, delta_y, delta_z;
   float theta1 = 0;
   float theta2 = 0;
@@ -204,8 +204,16 @@ static void manipulatorTask(void* param)
   }
 
   while(1) {
-    vTaskDelayUntil(&lastWakeTime, F2T(100));
+    vTaskDelayUntil(&lastWakeTime, F2T(5));
 
+    if (ledState==1){
+      ledState = 0;
+    }
+    else{
+      ledState = 1;
+    }
+
+    dynamixelSetLED(3, ledState)
     commanderGetSetpoint(&setpoint, &state);
 
     delta_x = setpoint.joy.roll*DELTA_WORK_X;

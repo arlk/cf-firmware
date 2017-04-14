@@ -67,10 +67,10 @@
 
 //kinematics stuff
 // robot geometry
- #define delta_e 115.0f     // end effector
- #define delta_f 457.3f     // base
- #define delta_re 232.0f
- #define delta_rf 112.0f
+#define delta_e 103.92f     // end effector
+#define delta_f 186.01f     // base
+#define delta_re 140.0f
+#define delta_rf 90.0f
  // trigonometric constants
  #define sqrt3 1.73205080f
  #define pi 3.141592653f    // PI
