@@ -138,9 +138,11 @@ void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
     t2=pwm2rad(targetAll[1]);
     tq_get=pitchMoment;
     targetAll[3] = updateBatteryPosition(tq_get,t1,t2); // Need header
-	
 
-
+    targetAll[0]=4500;
+    targetAll[1]=5500;
+    targetAll[2]=6500;
+    targetAll[3]=7500;
     /*  */
     /* if ((float)setpoint->joy.trigger > 0.5f && fabsf(state->attitude.pitch) < 1.0f ) */
     /* { */
