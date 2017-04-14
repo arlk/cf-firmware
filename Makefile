@@ -26,6 +26,7 @@ LPS_TDMA_ENABLE   ?= 0
 LPS_TDOA_ENABLE   ?= 0
 VEH 							?= cf
 MANIP							?=
+BEZ							  ?= eight
 
 ######### Vehicle configuration ##########
 include config/$(VEH)/config.mk
@@ -180,7 +181,7 @@ PROJ_OBJ += estimator_$(ESTIMATOR).o controller_$(CONTROLLER).o
 PROJ_OBJ += power_distribution_$(POWER_DISTRIBUTION).o
 
 # Trajectory modules
-PROJ_OBJ += simple_trajectories.o
+PROJ_OBJ += simple_trajectories_$(BEZ).o
 
 # Manipulator modules
 ifdef MANIP
@@ -301,7 +302,7 @@ ifeq ($(DEBUG), 1)
   CFLAGS += -O0 -g3 -DDEBUG
 else
 	# Fail on warnings
-	CFLAGS += -Os -g3 -Werror
+	# CFLAGS += -Os -g3 -Werror
 endif
 
 ifeq ($(LTO), 1)
