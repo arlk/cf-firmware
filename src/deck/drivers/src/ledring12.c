@@ -44,6 +44,7 @@
 #include "pm.h"
 #include "log.h"
 
+static xQueueHandle ledEffectQueue;
 
 /*
  * To add a new effect just add it as a static function with the prototype
@@ -96,6 +97,16 @@ static const uint8_t white[] = WHITE;
 static const uint8_t part_black[] = BLACK;
 
 uint8_t ledringmem[NBR_LEDS * 2];
+
+bool ledWriteQueue(uint32_t *ledEffect)
+{
+  return (pdTRUE == xQueueSend(ledEffectQueue, ledEffect, 0));
+}
+
+bool ledReadQueue(uint32_t *ledEffect)
+{
+  return (pdTRUE == xQueueReceive(ledEffectQueue, ledEffect, 0));
+}
 
 /**************** Black (LEDs OFF) ***************/
 
@@ -594,6 +605,8 @@ void ledring12Worker(void * data)
   static uint8_t buffer[NBR_LEDS][3];
   bool reset = true;
 
+  ledReadQueue(&effect);
+
   if (/*!pmIsDischarging() ||*/ (effect > neffect)) {
     ws2812Send(black, NBR_LEDS);
     return;
@@ -634,6 +647,8 @@ static void ledring12Init(DeckInfo *info)
   timer = xTimerCreate( "ringTimer", M2T(50),
                                      pdTRUE, NULL, ledring12Timer );
   xTimerStart(timer, 100);
+
+  ledEffectQueue = xQueueCreate(1, sizeof(uint32_t));
 }
 
 PARAM_GROUP_START(ring)

@@ -8,4 +8,6 @@
 
 extern uint8_t ledringmem[NBR_LEDS * 2];
 
+bool ledWriteQueue(uint32_t *ledEffect);
+
 #endif //__LEDRING12_H__
