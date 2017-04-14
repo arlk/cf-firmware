@@ -302,7 +302,7 @@ ifeq ($(DEBUG), 1)
   CFLAGS += -O0 -g3 -DDEBUG
 else
 	# Fail on warnings
-	CFLAGS += -Os -g3 -Werror
+	# CFLAGS += -Os -g3 -Werror
 endif
 
 ifeq ($(LTO), 1)

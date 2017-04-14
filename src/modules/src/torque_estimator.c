@@ -39,6 +39,7 @@
 #include "task.h"
 
 #include "pid.h"
+#include "log.h"
 #include "torque_estimator.h"
 #include "serial_manipulator.h"
 #include "sensors.h"
@@ -57,6 +58,14 @@ static bool isInit = false;
 
 PidObject pidServo;
 
+static float moment1;
+static float moment2;
+static float theta1;
+static float theta2;
+static float theta1Dot;
+static float theta2Dot;
+static float theta1DDot;
+static float theta2DDot;
 
 static inline int16_t saturateSignedInt16(float in)
 {
@@ -181,15 +190,6 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
 	//static float alpha;
 	//static float beta;
 	//static float delta;
-	static float moment1;
-	static float moment2;
-
-	static float theta1;
-	static float theta2;
-	//static float theta1Dot;
-	//static float theta2Dot;
-	//static float theta1DDot;
-	//static float theta2DDot;
 
 
 	theta1 = servoStates->pos[0];// + state->attitude.pitch;
@@ -233,3 +233,12 @@ float pwm2rad(float target){
   float target_rad = ((target-6000.0f)*0.0005f)*(PI);
 	return target_rad;
 }
+
+LOG_GROUP_START(manip)
+LOG_ADD(LOG_FLOAT, mom1, &moment1)
+LOG_ADD(LOG_FLOAT, mom2, &moment2)
+LOG_ADD(LOG_FLOAT, th1D, &theta1Dot)
+LOG_ADD(LOG_FLOAT, th2D, &theta2Dot)
+LOG_ADD(LOG_FLOAT, th1DD, &theta1DDot)
+LOG_ADD(LOG_FLOAT, th2DD, &theta2DDot)
+LOG_GROUP_STOP(manip)
