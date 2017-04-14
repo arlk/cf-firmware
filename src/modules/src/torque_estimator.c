@@ -57,6 +57,14 @@ static bool isInit = false;
 
 PidObject pidServo;
 
+static float moment1;
+static float moment2;
+static float theta1;
+static float theta2;
+static float theta1Dot;
+static float theta2Dot;
+static float theta1DDot;
+static float theta2DDot;
 
 static inline int16_t saturateSignedInt16(float in)
 {
@@ -124,12 +132,12 @@ float servoAccSat(float servoAcc, float servoAccMax)
 
 void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
 
-	
+
     targetAll[0] = (int)(2000.0f*setpoint->joy.pitch+6000.0f);
     targetAll[1] = (int)(2000.0f*setpoint->joy.throttle+6000.0f);
     targetAll[2] = 5000;
     //targetAll[2] = (int)(-3000.0f*(float)setpoint->joy.trigger+7000.0f);
-	
+
 
     /*
     if ((float)setpoint->joy.trigger > 0.5f && fabsf(state->attitude.pitch) < 1.0f )
@@ -169,15 +177,7 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
 	static float alpha;
 	static float beta;
 	static float delta;
-	static float moment1;
-	static float moment2;
 
-	static float theta1;
-	static float theta2;
-	static float theta1Dot;
-	static float theta2Dot;
-	static float theta1DDot;
-	static float theta2DDot;
 
 
 	theta1 = servoStates->pos[0];// + state->attitude.pitch;
@@ -215,3 +215,11 @@ float pwm2rad(float target){
 	return target_rad;
 }
 
+LOG_GROUP_START(manip)
+LOG_ADD(LOG_FLOAT, mom1, &moment1)
+LOG_ADD(LOG_FLOAT, mom2, &moment2)
+LOG_ADD(LOG_FLOAT, th1D, &theta1Dot)
+LOG_ADD(LOG_FLOAT, th2D, &theta2Dot)
+LOG_ADD(LOG_FLOAT, th1DD, &theta1DDot)
+LOG_ADD(LOG_FLOAT, th2DD, &theta2DDot)
+LOG_GROUP_STOP(manip)
