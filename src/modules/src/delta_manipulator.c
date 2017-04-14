@@ -15,7 +15,7 @@
  * Univesity of Illinois at Urbana-Champaign
  * Visit us at http://naira.mechse.illinois.edu/
  *
- * Authored by Robert Mitchell Jones and Arun Lakshmanan
+ * Authored by Gabriel Haberfeld and Arun Lakshmanan
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -182,15 +182,36 @@ void dynamixelMovePosn(uint8_t motorID, uint16_t position)
   uart1SendData(msg.len + DELTA_STD_LEN, (uint8_t*)&msg);
 }
 
+void dynamixelSetMaxTorque(uint8_t motorID, uint16_t torque)
+{
+  /* position: 0 <--> 1023 */
+
+  dynamixelPacket_s msg = (dynamixelPacket_s) {
+    .hdr = {0xFF, 0xFF},
+    .mID = motorID,
+    .len = DELTA_DOUBLE_MSG_LEN,
+    .inst = DELTA_WRITE_DATA,
+    .addr = DELTA_ADDRESS_MAX_TORQUE,
+    .data = {0}
+  };
+
+  memcpy(&msg.data, &torque, sizeof(torque));
+  calcChksum((uint8_t*)&msg);
+
+  uart1SendData(msg.len + DELTA_STD_LEN, (uint8_t*)&msg);
+}
+
+
 static void manipulatorTask(void* param)
 {
   uint32_t tick = 0;
   uint32_t lastWakeTime;
-  uint8_t ledState = 1;
+  //uint8_t ledState = 1;
   float delta_x, delta_y, delta_z;
   float theta1 = 0;
   float theta2 = 0;
   float theta3 = 0;
+  float rho = 0;
 
   vTaskSetApplicationTaskTag(0, (void*)TASK_MANIPULATOR_ID_NBR);
 
@@ -203,22 +224,42 @@ static void manipulatorTask(void* param)
     vTaskDelayUntil(&lastWakeTime, F2T(RATE_MANIPULATOR_LOOP));
   }
 
-  while(1) {
-    vTaskDelayUntil(&lastWakeTime, F2T(5));
+  dynamixelSetMaxTorque(1,DELTA_MAX_TORQUE);
+  vTaskDelayUntil(&lastWakeTime, F2T(100));
+  dynamixelSetMaxTorque(2,DELTA_MAX_TORQUE);
+  vTaskDelayUntil(&lastWakeTime, F2T(100));
+  dynamixelSetMaxTorque(3,DELTA_MAX_TORQUE);
+  vTaskDelayUntil(&lastWakeTime, F2T(100));
 
-    if (ledState==1){
+  while(1) {
+    vTaskDelayUntil(&lastWakeTime, F2T(100));
+
+    /*if (ledState==1){
       ledState = 0;
     }
     else{
       ledState = 1;
     }
 
-    dynamixelSetLED(3, ledState)
+    dynamixelSetLED(3, ledState);
+    vTaskDelayUntil(&lastWakeTime, F2T(100));*/
+
     commanderGetSetpoint(&setpoint, &state);
 
-    delta_x = setpoint.joy.roll*DELTA_WORK_X;
+    /*delta_x = setpoint.joy.roll*DELTA_WORK_X;
     delta_y = setpoint.joy.pitch*DELTA_WORK_Y;
-    delta_z = (1.0+setpoint.joy.throttle)*DELTA_WORK_Z + DELTA_Z_OFFSET;
+    delta_z = (1.0f+setpoint.joy.throttle)*DELTA_WORK_Z + DELTA_Z_OFFSET;*/
+
+    rho = 2.0f*pi*(float)tick/20.0f;
+
+    /*if (rho>2.0f*pi){
+      rho=0.0f;
+    }*/
+
+
+    delta_x = DELTA_WORK_X*3.0f*(float)cos((double)rho);
+    delta_y = DELTA_WORK_X*3.0f*(float)sin((double)rho);
+    delta_z = 150.0f;
 
     delta_calcInverse(delta_x, delta_y, delta_z, &theta1, &theta2, &theta3);
 
@@ -227,7 +268,7 @@ static void manipulatorTask(void* param)
     dynamixelMovePosn(2, delta_deg2dec(theta2));
     vTaskDelayUntil(&lastWakeTime, F2T(100));
     dynamixelMovePosn(3, delta_deg2dec(theta3));
-    vTaskDelayUntil(&lastWakeTime, F2T(100));
+    //vTaskDelayUntil(&lastWakeTime, F2T(100));
 
 
     tick++;

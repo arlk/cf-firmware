@@ -15,7 +15,7 @@
  * Univesity of Illinois at Urbana-Champaign
  * Visit us at http://naira.mechse.illinois.edu/
  *
- * Authored by Robert Mitchell Jones
+ * Authored by Gabriel Haberfeld and Arun Lakshmanan
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,9 +84,10 @@
 #define DELTA_MIN_DPOS 0.0f
 #define DELTA_MAX_APOS 150.0f*pi/180.0f
 #define DELTA_MIN_APOS -150.0f*pi/180.0f
+#define DELTA_MAX_TORQUE 256
 // work volume
-#define DELTA_WORK_X 60.0f
-#define DELTA_WORK_Y 60.0f
+#define DELTA_WORK_X 30.0f
+#define DELTA_WORK_Y 30.0f
 #define DELTA_WORK_Z 30.0f
 #define DELTA_Z_OFFSET 100.0f
 
@@ -106,6 +107,8 @@ void dynamixelEnableTorque(uint8_t motorID, uint8_t torqueState);
 void dynamixelSetLED(uint8_t motorID, uint8_t ledState);
 
 void dynamixelMovePosn(uint8_t motorID, uint16_t position);
+
+void dynamixelSetMaxTorque(uint8_t motorID, uint16_t torque);
 
 
 
