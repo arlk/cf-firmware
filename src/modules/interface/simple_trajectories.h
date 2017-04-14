@@ -54,6 +54,7 @@ struct traj{
     int n;
     float total_time;
     uint32_t led_state;
+    uint8_t led_rgb[3];
     traj *next;
 };
 

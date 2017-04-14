@@ -52,6 +52,9 @@ static float opt_time_stretch = 12.5f;
 
 static float nchosk[5][11] = {{1,6,15,20,15,6,1,0,0,0},{1,7,21,35,35,21,7,1,0,0},{1,8,28,56,70,56,28,8,1,0},{1,9,36,84,126,126,84,36,9,1}};
 
+const uint8_t uiuc_blue[] = {0, 0, 70};
+const uint8_t uiuc_orange[] = {255, 30, 0};
+
 /* static float omg = 0; */
 /* static float amp = 0; */
 /* static float phase = 0; */
@@ -146,7 +149,8 @@ void updateTrajectory(setpoint_t* setpoint, const uint32_t tick)
       diffBezier(&V_control, &A_control);
       diffBezier(&A_control, &J_control);
       diffBezier(&J_control, &S_control);
-      ledWriteQueue(&P_control.led_state);
+      ledEffectEnqueue(&P_control.led_state);
+      ledRGBEnqueue(P_control.led_rgb);
     }
 
     switch (traj_state) {
@@ -260,10 +264,13 @@ void initBezierTraj(void)
   P[0].led_state = 7;
   P[1].led_state = 7;
   P[2].led_state = 7;
+  memcpy(P[0].led_rgb, uiuc_blue, 3*sizeof(uint8_t));
+  memcpy(P[1].led_rgb, uiuc_blue, 3*sizeof(uint8_t));
+  memcpy(P[2].led_rgb, uiuc_blue, 3*sizeof(uint8_t));
 
   P[3].total_time = 5.0f;
 
-  opt_time_stretch = 5.5f;
+  opt_time_stretch = 7.0f;
   P[4].total_time = opt_time_stretch*0.2688f;
   P[5].total_time = opt_time_stretch*0.2637f;
   P[6].total_time = opt_time_stretch*0.0995f;
@@ -272,11 +279,16 @@ void initBezierTraj(void)
   P[5].led_state = 7;
   P[6].led_state = 7;
   P[7].led_state = 7;
+  memcpy(P[4].led_rgb, uiuc_orange, 3*sizeof(uint8_t));
+  memcpy(P[5].led_rgb, uiuc_orange, 3*sizeof(uint8_t));
+  memcpy(P[6].led_rgb, uiuc_orange, 3*sizeof(uint8_t));
+  memcpy(P[7].led_rgb, uiuc_orange, 3*sizeof(uint8_t));
 
   P[8].total_time = 5.0f;
 
   P[9].total_time = 3.0f;
   P[9].led_state = 7;
+  memcpy(P[9].led_rgb, uiuc_orange, 3*sizeof(uint8_t));
 
   P[10].total_time = 5.0f;
 
@@ -289,6 +301,10 @@ void initBezierTraj(void)
   P[12].led_state = 7;
   P[13].led_state = 7;
   P[14].led_state = 7;
+  memcpy(P[11].led_rgb, uiuc_blue, 3*sizeof(uint8_t));
+  memcpy(P[12].led_rgb, uiuc_blue, 3*sizeof(uint8_t));
+  memcpy(P[13].led_rgb, uiuc_blue, 3*sizeof(uint8_t));
+  memcpy(P[14].led_rgb, uiuc_blue, 3*sizeof(uint8_t));
 
   P[15].total_time = 10.0f;
 
@@ -300,14 +316,15 @@ void initBezierTraj(void)
       P[j].next = &P[0];
     }
     for (int i = 0; i <= P[j].n; i++) {
-        P[j].Cx[i] = Cx[j][i];
-        P[j].Cy[i] = Cy[j][i];
+        P[j].Cx[i] = (Cx[j][i] + Cy[j][i])*0.70710678118;
+        P[j].Cy[i] = (-Cx[j][i] + Cy[j][i])*0.70710678118;
         P[j].Cz[i] = Cz[j][i];
       }
   }
 
-  P_control = P[1];
-  ledWriteQueue(&P_control.led_state);
+  P_control = P[0];
+  ledEffectEnqueue(&P_control.led_state);
+  ledRGBEnqueue(P_control.led_rgb);
 
   diffBezier(&P_control, &V_control);
   diffBezier(&V_control, &A_control);

@@ -45,6 +45,7 @@
 #include "log.h"
 
 static xQueueHandle ledEffectQueue;
+static xQueueHandle ledRGBQueue;
 
 /*
  * To add a new effect just add it as a static function with the prototype
@@ -98,14 +99,50 @@ static const uint8_t part_black[] = BLACK;
 
 uint8_t ledringmem[NBR_LEDS * 2];
 
-bool ledWriteQueue(uint32_t *ledEffect)
+bool ledEffectEnqueue(uint32_t *ledEffect)
 {
-  return (pdTRUE == xQueueSend(ledEffectQueue, ledEffect, 0));
+  portBASE_TYPE result;
+  bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+
+  if (isInInterrupt) {
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+    result = xQueueSendFromISR(ledEffectQueue, ledEffect, &xHigherPriorityTaskWoken);
+    if(xHigherPriorityTaskWoken == pdTRUE)
+    {
+      portYIELD();
+    }
+  } else {
+    result = xQueueSend(ledEffectQueue, ledEffect, 0);
+  }
+  return (result==pdTRUE);
 }
 
-bool ledReadQueue(uint32_t *ledEffect)
+bool ledRGBEnqueue(uint8_t *ledRGB)
+{
+  portBASE_TYPE result;
+  bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+
+  if (isInInterrupt) {
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+    result = xQueueSendFromISR(ledRGBQueue, ledRGB, &xHigherPriorityTaskWoken);
+    if(xHigherPriorityTaskWoken == pdTRUE)
+    {
+      portYIELD();
+    }
+  } else {
+    result = xQueueSend(ledRGBQueue, ledRGB, 0);
+  }
+  return (result==pdTRUE);
+}
+
+bool ledEffectDequeue(uint32_t *ledEffect)
 {
   return (pdTRUE == xQueueReceive(ledEffectQueue, ledEffect, 0));
+}
+
+bool ledRGBDequeue(uint8_t *ledRGB)
+{
+  return (pdTRUE == xQueueReceive(ledRGBQueue, ledRGB, 0));
 }
 
 /**************** Black (LEDs OFF) ***************/
@@ -168,7 +205,7 @@ static void whiteSpinEffect(uint8_t buffer[][3], bool reset)
   COPY_COLOR(buffer[(NBR_LEDS-1)], temp);
 }
 
-static uint8_t solidRed=20, solidGreen=20, solidBlue=20;
+static uint8_t solidRGB[3]  = {20, 20, 20};
 static float glowstep = 0.05;
 static void solidColorEffect(uint8_t buffer[][3], bool reset)
 {
@@ -182,9 +219,9 @@ static void solidColorEffect(uint8_t buffer[][3], bool reset)
 
   for (i=0; i<NBR_LEDS; i++)
   {
-    buffer[i][0] = solidRed*brightness;
-    buffer[i][1] = solidGreen*brightness;
-    buffer[i][2] = solidBlue*brightness;
+    buffer[i][0] = solidRGB[0]*brightness;
+    buffer[i][1] = solidRGB[1]*brightness;
+    buffer[i][2] = solidRGB[2]*brightness;
   }
 }
 
@@ -605,7 +642,8 @@ void ledring12Worker(void * data)
   static uint8_t buffer[NBR_LEDS][3];
   bool reset = true;
 
-  ledReadQueue(&effect);
+  ledEffectDequeue(&effect);
+  ledRGBDequeue(solidRGB);
 
   if (/*!pmIsDischarging() ||*/ (effect > neffect)) {
     ws2812Send(black, NBR_LEDS);
@@ -649,14 +687,15 @@ static void ledring12Init(DeckInfo *info)
   xTimerStart(timer, 100);
 
   ledEffectQueue = xQueueCreate(1, sizeof(uint32_t));
+  ledRGBQueue = xQueueCreate(1, 3*sizeof(uint8_t));
 }
 
 PARAM_GROUP_START(ring)
 PARAM_ADD(PARAM_UINT8, effect, &effect)
 PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, neffect, &neffect)
-PARAM_ADD(PARAM_UINT8, solidRed, &solidRed)
-PARAM_ADD(PARAM_UINT8, solidGreen, &solidGreen)
-PARAM_ADD(PARAM_UINT8, solidBlue, &solidBlue)
+PARAM_ADD(PARAM_UINT8, solidRed, &solidRGB[0])
+PARAM_ADD(PARAM_UINT8, solidGreen, &solidRGB[1])
+PARAM_ADD(PARAM_UINT8, solidBlue, &solidRGB[2])
 PARAM_ADD(PARAM_UINT8, headlightEnable, &headlightEnable)
 PARAM_ADD(PARAM_FLOAT, glowstep, &glowstep)
 PARAM_ADD(PARAM_FLOAT, emptyCharge, &emptyCharge)
