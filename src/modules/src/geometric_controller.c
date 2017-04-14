@@ -51,7 +51,7 @@
 
 #ifdef SERIAL_MANIP
 
-static float manip_mom_gain = 2.0f;
+static float manip_mom_gain = 0.001f;
 static float test_manip_rollMoment; // Nm
 static float test_manip_pitchMoment = 0.1f; // Nm
 static float test_manip_yawMoment; // Nm
