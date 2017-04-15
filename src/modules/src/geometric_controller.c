@@ -409,7 +409,7 @@ void geometricMomentController(state_t* state,
 
 
   #ifdef SERIAL_MANIP
-  servoStates_t servoStates;
+  static servoStates_t servoStates;
   int targetAll[3];
 
   servoController(targetAll, &servoStates, state, sensors, setpoint);
