@@ -196,8 +196,8 @@ static void manipulatorTask(void* param)
 
     serialManipGetQueueCmd(targetAll);
 
-    maestro_set_target(12, 0, targetAll[0]);
-    maestro_set_target(12, 1, 12000-targetAll[1]);
+    maestro_set_target(12, 0, 12000-targetAll[0]);
+    maestro_set_target(12, 1, targetAll[1]);
     maestro_set_target(12, 2, targetAll[2]);
 
     //serialManipEnqueueCmd(manipCmdQueue, (void *)targetAll);

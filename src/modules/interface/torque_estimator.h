@@ -38,7 +38,7 @@
 #include "stabilizer_types.h"
 #include "serial_manipulator.h"
 
-#define K_VIS 65.0f
+#define K_VIS 70.0f
 
 #define IZ_1 28.741e-7f
 #define IZ_2 189.073E-6f

@@ -134,8 +134,8 @@ float servoAccSat(float servoAcc, float servoAccMax)
 void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
 
 
-    targetAll[0] = (int)(2000.0f*setpoint->joy.pitch+6000.0f);
-    targetAll[1] = (int)(2000.0f*setpoint->joy.throttle+6000.0f);
+    targetAll[0] = (int)(2000.0f*setpoint->joy.throttle+6000.0f);
+    targetAll[1] = (int)(2000.0f*setpoint->joy.pitch+6000.0f);
     targetAll[2] = 5000;
     //targetAll[2] = (int)(-3000.0f*(float)setpoint->joy.trigger+7000.0f);
 
@@ -157,17 +157,17 @@ void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
 }
 
 ///// SERVO ESTIMATOR LOOP /////
-/*void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, const state_t* state, const sensorData_t* sensorData, int* targetAll){
+void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, const state_t* state, const sensorData_t* sensorData, int* targetAll){
 	float avis;
 
 	avis = -K_VIS*servoStates->vel[servoNumber];
 	servoStates->acc[servoNumber] = avis + servoControllerUpdatePID(servoStates->pos[servoNumber], pwm2rad((float)targetAll[servoNumber]) )
-		+ lagrangeDynamics(0.0f, servoStates, state, sensorData);
+		+ 1.0f*lagrangeDynamics(0.0f, servoStates, state, sensorData);
 	servoStates->acc[servoNumber] = servoAccSat(servoStates->acc[servoNumber],SERVO_ACC_MAX);
 	servoStates->vel[servoNumber] += servoStates->acc[servoNumber]*ts;
 	servoStates->pos[servoNumber] += servoStates->vel[servoNumber]*ts;
-}*/
-
+}
+/*
 void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, const state_t* state,
    const sensorData_t* sensorData, int* targetAll){
 	float avis;
@@ -178,50 +178,49 @@ void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, const
 	servoStates->acc[servoNumber] = 0.0f;
 	servoStates->vel[servoNumber] += 0.0f;
 	servoStates->pos[servoNumber] = -(pwm2rad((float)targetAll[servoNumber]));
-}
+}*/
 
 
 ///// MANIPULATOR DYNAMICS LOOP /////
 float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const state_t* state, const sensorData_t* sensorData){
 	static float c1;
-	//static float c2;
-	//static float s2;
+	static float c2;
+	static float s2;
 	static float c12;
-	//static float alpha;
-	//static float beta;
-	//static float delta;
+	static float alpha;
+	static float beta;
+	static float delta;
 
 
 	theta1 = servoStates->pos[0];// + state->attitude.pitch;
 	theta2 = servoStates->pos[1];// + state->attitude.pitch;
-	/*theta1Dot = servoStates->vel[0];// + DEG_TO_RAD*sensorData->gyro.y;
+	theta1Dot = servoStates->vel[0];// + DEG_TO_RAD*sensorData->gyro.y;
 	theta2Dot = servoStates->vel[1];// + DEG_TO_RAD*sensorData->gyro.y;
 	theta1DDot = servoStates->acc[0];// + state->angAcc.y;
 	theta2DDot = servoStates->acc[1];// + state->angAcc.y;
-  */
+
 	c1 = arm_sin_f32(theta1);
-	//c2 = arm_cos_f32(theta2 - theta1);
-	//s2 = arm_sin_f32(theta2 - theta1);
+	c2 = arm_sin_f32(theta2 - theta1);
+	s2 = -arm_cos_f32(theta2 - theta1);
 	c12 = arm_sin_f32(theta2);
 
 
 
-	//alpha = IZ_1 + IZ_2 + M_1*powf(R_1,2.0f) + M_2*(powf(L_1,2.0f) + powf(L_2,2.0f));
-	//beta = M_2*L_1*R_2;
-	//delta = IZ_2 + M_2*powf(R_2,2.0f);
+	alpha = IZ_1 + IZ_2 + M_1*powf(R_1,2.0f) + M_2*(powf(L_1,2.0f) + powf(L_2,2.0f));
+	beta = M_2*L_1*R_2;
+	delta = IZ_2 + M_2*powf(R_2,2.0f);
 
-	//moment1 = (alpha + 2.0f*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot
-	//				+ (-beta*s2*(theta1Dot + theta2Dot))*theta2Dot + (-GRAVITY*c1*(M_1*R_1 + M_2*L_2) + M_2*(-GRAVITY)*R_2*c12);
+	moment1 = 1.0f*(  (alpha + 2.0f*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot
+					+ (-beta*s2*(theta1Dot + theta2Dot))*theta2Dot  ) // Dynamic Torque
+          + (-GRAVITY*c1*(M_1*R_1 + M_2*L_1) + M_2*(-GRAVITY)*R_2*c12); // Static Torque
 
-	//moment2 = (delta + beta*c2)*theta1DDot + delta*theta2DDot + (beta*s2*theta1Dot)*theta1Dot;
+	moment2 = 1.0f*(  (delta + beta*c2)*theta1DDot + delta*theta2DDot + (beta*s2*theta1Dot)*theta1Dot  );
 
-	//return moment1 + moment2;  /// Total manipulator moment ///
-
-  moment1 = -GRAVITY*c1*(M_1*R_1 + M_2*L_2) + M_2*(-GRAVITY)*R_2*c12;
+  //moment1 = -GRAVITY*c1*(M_1*R_1 + M_2*L_1) + M_2*(-GRAVITY)*R_2*c12;
   //moment1 = 1.0f;
-  moment2 = 0.0f;
+  //moment2 = 0.0f;
 
-  return moment1 + moment2;
+  return moment1 + moment2;  /// Total manipulator moment ///
 
 }
 
@@ -230,15 +229,20 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
 float pwm2rad(float target){
 	//code
 	//float target_rad = ((target-4000.0f)*0.00025f)*(PI);
-  float target_rad = ((target-6000.0f)*0.0005f)*(PI);
+  float target_rad = ((target-6000.0f)*0.0005f)*(0.8723f);
 	return target_rad;
 }
 
-LOG_GROUP_START(manip)
+LOG_GROUP_START(manip1)
 LOG_ADD(LOG_FLOAT, mom1, &moment1)
-LOG_ADD(LOG_FLOAT, mom2, &moment2)
+LOG_ADD(LOG_FLOAT, th1, &theta1)
 LOG_ADD(LOG_FLOAT, th1D, &theta1Dot)
-LOG_ADD(LOG_FLOAT, th2D, &theta2Dot)
 LOG_ADD(LOG_FLOAT, th1DD, &theta1DDot)
+LOG_GROUP_STOP(manip1)
+
+LOG_GROUP_START(manip2)
+LOG_ADD(LOG_FLOAT, mom2, &moment2)
+LOG_ADD(LOG_FLOAT, th2, &theta2)
+LOG_ADD(LOG_FLOAT, th2D, &theta2Dot)
 LOG_ADD(LOG_FLOAT, th2DD, &theta2DDot)
-LOG_GROUP_STOP(manip)
+LOG_GROUP_STOP(manip2)
