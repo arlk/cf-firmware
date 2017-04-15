@@ -112,25 +112,25 @@ void circleUpdate(setpoint_t* setpoint, const uint32_t tick)
     compBezier(&S_control,S_vec,pre_comp,pre_comp_n,4,(float)tick*MAIN_LOOP_DT);
 
 
-    setpoint->position.x = P_vec[0] ;
+    setpoint->position.x = P_vec[0];
     setpoint->position.y = P_vec[1];
-    setpoint->position.z = circAlt;
+    setpoint->position.z = P_vec[2];
 
     setpoint->velocity.x = V_vec[0];
     setpoint->velocity.y = V_vec[1];
-    setpoint->velocity.z = 0.0f;
+    setpoint->velocity.z = V_vec[2];
 
     setpoint->acc.x = A_vec[0];
     setpoint->acc.y = A_vec[1];
-    setpoint->acc.z = 0.0f;
+    setpoint->acc.z = A_vec[2];
 
     setpoint->jerk.x = J_vec[0];
     setpoint->jerk.y = J_vec[1];
-    setpoint->jerk.z = 0.0f;
+    setpoint->jerk.z = J_vec[2];
 
     setpoint->snap.x = S_vec[0];
     setpoint->snap.y = S_vec[1];
-    setpoint->snap.z = 0.0f;
+    setpoint->snap.z = S_vec[2];
 
     setpoint->attitude.yaw = 0.0f;
     setpoint->attitudeRate.yaw = 0.0f;
@@ -204,7 +204,7 @@ void compBezier (traj* P, float* vec, float* c,float*cn,int bias,float t){
                 coef = coef*powf(time,(float)i)*powf((1.0f - time), P->n - (float)i);
                 vec[0] = vec[0] + coef*P->Cx[i];
                 vec[1] = vec[1] + coef*P->Cy[i];
-                //vec[2] = vec[2] + coef*P->Cz[i];
+                vec[2] = vec[2] + coef*P->Cz[i];
             }
 }
 
@@ -224,7 +224,7 @@ void diffBezier(traj* P, traj* V) {
 	for (int i = 0; i <= n-1; i++) {
 		V->Cx[i] = n*(P->Cx[i + 1] - P->Cx[i])/(V-> total_time);
 		V->Cy[i] = n*(P->Cy[i + 1] - P->Cy[i])/(V-> total_time);
-		//V->Cz[i] = n*(P->Cz[i + 1] - P->Cz[i])/V-> total_time;
+    V->Cz[i] = n*(P->Cz[i + 1] - P->Cz[i])/V-> total_time;
 	}
 }
 
@@ -257,7 +257,7 @@ void initBezierTraj(void)
      float Cz[16][10] = {{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 },{ 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 , 0.000000 }};
 
 
-  opt_time_stretch = 8.0f;
+  opt_time_stretch = 21.0f;
   P[0].total_time = opt_time_stretch*0.3629f;
   P[1].total_time = opt_time_stretch*0.2743f;
   P[2].total_time = opt_time_stretch*0.3629f;
@@ -270,7 +270,7 @@ void initBezierTraj(void)
 
   P[3].total_time = 5.0f;
 
-  opt_time_stretch = 7.0f;
+  opt_time_stretch = 16.0f;
   P[4].total_time = opt_time_stretch*0.2688f;
   P[5].total_time = opt_time_stretch*0.2637f;
   P[6].total_time = opt_time_stretch*0.0995f;
@@ -286,13 +286,13 @@ void initBezierTraj(void)
 
   P[8].total_time = 5.0f;
 
-  P[9].total_time = 3.0f;
+  P[9].total_time = 7.0f;
   P[9].led_state = 7;
   memcpy(P[9].led_rgb, uiuc_orange, 3*sizeof(uint8_t));
 
   P[10].total_time = 5.0f;
 
-  opt_time_stretch = 10.0f;
+  opt_time_stretch = 27.0f;
   P[11].total_time = opt_time_stretch*0.2893f;
   P[12].total_time = opt_time_stretch*0.2107f;
   P[13].total_time = opt_time_stretch*0.2107f;
@@ -316,9 +316,9 @@ void initBezierTraj(void)
       P[j].next = &P[0];
     }
     for (int i = 0; i <= P[j].n; i++) {
-        P[j].Cx[i] = (Cx[j][i] + Cy[j][i])*0.70710678118;
-        P[j].Cy[i] = (-Cx[j][i] + Cy[j][i])*0.70710678118;
-        P[j].Cz[i] = Cz[j][i];
+        P[j].Cx[i] = (Cx[j][i] - Cz[j][i])*0.70710678118;
+        P[j].Cy[i] = (-Cx[j][i] - Cz[j][i])*0.70710678118;
+        P[j].Cz[i] = Cy[j][i] + 1.75;
       }
   }
 
