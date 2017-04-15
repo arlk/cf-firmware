@@ -82,8 +82,8 @@
 // dynamixel particulars
 #define DELTA_MAX_DPOS 1023.0f
 #define DELTA_MIN_DPOS 0.0f
-#define DELTA_MAX_APOS 150.0f*pi/180.0f
-#define DELTA_MIN_APOS -150.0f*pi/180.0f
+#define DELTA_MAX_APOS -150.0f*pi/180.0f
+#define DELTA_MIN_APOS 150.0f*pi/180.0f
 #define DELTA_MAX_TORQUE 256
 // work volume
 #define DELTA_WORK_X 30.0f
