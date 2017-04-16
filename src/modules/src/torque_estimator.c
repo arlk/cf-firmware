@@ -204,7 +204,6 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
 	s2 = -arm_cos_f32(theta2 - theta1);
 	c12 = arm_sin_f32(theta2);
 
-  
 
 	alpha = IZ_1 + IZ_2 + M_1*powf(R_1,2.0f) + M_2*(powf(L_1,2.0f) + powf(L_2,2.0f));
 	beta = M_2*L_1*R_2;
