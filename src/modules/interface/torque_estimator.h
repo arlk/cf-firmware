@@ -43,7 +43,7 @@
 #define M_1 9.30e-3f
 #define M_2 30.7e-3f
 #define L_1 0.100f
-#define L_2 0.130f
+#define L_2 0.123f
 #define R_1 43.48e-3f
 #define R_2 67.77e-3f
 #define IZ_1 28.741e-7f

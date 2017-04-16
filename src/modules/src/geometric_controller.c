@@ -51,7 +51,7 @@
 
 #ifdef SERIAL_MANIP
 
-static float manip_mom_gain = 200000.0f;
+static float manip_mom_gain = 120000.0f;
 static float test_manip_rollMoment; // Nm
 static float test_manip_pitchMoment = 0.1f; // Nm
 static float test_manip_yawMoment; // Nm
@@ -62,7 +62,8 @@ static float k_pos_xy = 0.85f;
 static float k_pos_z = 0.65f;
 static float k_vel_xy = 0.45f;
 static float k_vel_z = 0.25f;
-static float mass = 0.028f;
+//static float mass = 0.028f;
+static float mass = 0.028f + (0.028f/0.210f)*0.0f;
 static float thr_gain = 60000.0f;
 
 static float k_rot_xy = 1.0f;

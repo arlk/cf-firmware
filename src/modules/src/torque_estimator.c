@@ -135,7 +135,8 @@ void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
 
 
     targetAll[0] = (int)(2000.0f*setpoint->joy.throttle+6000.0f);
-    targetAll[1] = (int)(2000.0f*setpoint->joy.pitch+6000.0f);
+    //targetAll[1] = (int)(2000.0f*setpoint->joy.pitch+6000.0f);
+    targetAll[1] = (int)(2000.0f*setpoint->joy.throttle+6000.0f);
     targetAll[2] = 5000;
     //targetAll[2] = (int)(-3000.0f*(float)setpoint->joy.trigger+7000.0f);
 
@@ -190,6 +191,9 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
 	static float alpha;
 	static float beta;
 	static float delta;
+  static float iz_2_new;
+  static float m_2_new;
+  static float r_2_new;
 
 
 	theta1 = servoStates->pos[0];// + state->attitude.pitch;
@@ -204,14 +208,17 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
 	s2 = -arm_cos_f32(theta2 - theta1);
 	c12 = arm_sin_f32(theta2);
 
+  iz_2_new = IZ_2 + payloadMass*powf(L_2, 2.0f);
+  m_2_new = M_2 + payloadMass;
+  r_2_new = (M_2*R_2 + payloadMass*L_2)/(M_2 + payloadMass);
 
-	alpha = IZ_1 + IZ_2 + M_1*powf(R_1,2.0f) + M_2*(powf(L_1,2.0f) + powf(L_2,2.0f));
-	beta = M_2*L_1*R_2;
-	delta = IZ_2 + M_2*powf(R_2,2.0f);
+	alpha = IZ_1 + iz_2_new + M_1*powf(R_1,2.0f) + m_2_new*(powf(L_1,2.0f) + powf(L_2,2.0f));
+	beta = m_2_new*L_1*r_2_new;
+	delta = iz_2_new + m_2_new*powf(r_2_new,2.0f);
 
 	moment1 = -1.0f*(  (alpha + 2.0f*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot
 					+ (-beta*s2*(theta1Dot + theta2Dot))*theta2Dot  ) // Dynamic Torque
-          + (-GRAVITY*c1*(M_1*R_1 + M_2*L_1) + M_2*(-GRAVITY)*R_2*c12); // Static Torque
+          + (-GRAVITY*c1*(M_1*R_1 + m_2_new*L_1) + m_2_new*(-GRAVITY)*r_2_new*c12); // Static Torque
 
 	moment2 = -1.0f*(  (delta + beta*c2)*theta1DDot + delta*theta2DDot + (beta*s2*theta1Dot)*theta1Dot  );
 
