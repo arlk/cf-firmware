@@ -197,8 +197,8 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
   static float r_2_new;
 
 
-	theta1 = servoStates->pos[0];// + state->attitude.pitch;
-	theta2 = servoStates->pos[1];// + state->attitude.pitch;
+	theta1 = servoStates->pos[0] - state->attitude.pitch;
+	theta2 = servoStates->pos[1] - state->attitude.pitch;
 	theta1Dot = servoStates->vel[0];// + DEG_TO_RAD*sensorData->gyro.y;
 	theta2Dot = servoStates->vel[1];// + DEG_TO_RAD*sensorData->gyro.y;
 	theta1DDot = servoStates->acc[0];// + state->angAcc.y;
@@ -223,10 +223,6 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
 
 	moment2 = -1.0f*(  (delta + beta*c2)*theta1DDot + delta*theta2DDot + (beta*s2*theta1Dot)*theta1Dot  );
 
-  //moment1 = -GRAVITY*c1*(M_1*R_1 + M_2*L_1) + M_2*(-GRAVITY)*R_2*c12;
-  //moment1 = 1.0f;
-  //moment2 = 0.0f;
-
   return moment1 + moment2;  /// Total manipulator moment ///
 
 }
@@ -234,8 +230,6 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
 
 ///// TOOLS /////
 float pwm2rad(float target){
-	//code
-	//float target_rad = ((target-4000.0f)*0.00025f)*(PI);
   float target_rad = ((target-6000.0f)*0.0005f)*(0.8723f);
 	return target_rad;
 }
