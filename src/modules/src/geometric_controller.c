@@ -51,10 +51,16 @@
 
 #ifdef SERIAL_MANIP
 
+static float payloadMass = 0.025f;
+static float mass = 0.028f + (0.028f/0.210f)*0.025f; // manually add payloadMass
 static float manip_mom_gain = 120000.0f;
 static float test_manip_rollMoment; // Nm
 static float test_manip_pitchMoment = 0.1f; // Nm
 static float test_manip_yawMoment; // Nm
+
+#else
+
+static float mass = 0.028f;
 
 #endif /* SERIAL_MANIP */
 
@@ -62,8 +68,6 @@ static float k_pos_xy = 0.85f;
 static float k_pos_z = 0.65f;
 static float k_vel_xy = 0.45f;
 static float k_vel_z = 0.25f;
-//static float mass = 0.028f;
-static float mass = 0.028f + (0.028f/0.210f)*0.0f;
 static float thr_gain = 60000.0f;
 
 static float k_rot_xy = 1.0f;
@@ -420,7 +424,7 @@ void geometricMomentController(state_t* state,
       // coad
       rollOutput  = saturateSignedInt16(mom_gain*rollMoment /*+ manip_mom_gain*test_manip_rollMoment*/);
       //pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*test_manip_pitchMoment);
-      pitchOutput = saturateSignedInt16( mom_gain*pitchMoment - manip_mom_gain*lagrangeDynamics(0.0f, &servoStates, state, sensors));
+      pitchOutput = saturateSignedInt16( mom_gain*pitchMoment - manip_mom_gain*lagrangeDynamics(payloadMass, &servoStates, state, sensors));
       //pitchOutput = saturateSignedInt16( mom_gain*pitchMoment + 5.0f);
       //pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
       yawOutput   = saturateSignedInt16(mom_gain*yawMoment /*+ manip_mom_gain*test_manip_yawMoment*/);
@@ -480,8 +484,8 @@ PARAM_ADD(PARAM_FLOAT, thrust_gain, &thr_gain)
 PARAM_ADD(PARAM_FLOAT, mass, &mass)
 PARAM_GROUP_STOP(geomThrust)
 
-#ifdef SERIAL_MANIP
 
+#ifdef SERIAL_MANIP
 PARAM_GROUP_START(feedforward)
 PARAM_ADD(PARAM_FLOAT, manip_gain, &manip_mom_gain)
 PARAM_ADD(PARAM_FLOAT, manip_roll, &test_manip_rollMoment)

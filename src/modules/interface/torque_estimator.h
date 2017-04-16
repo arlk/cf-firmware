@@ -38,7 +38,7 @@
 #include "stabilizer_types.h"
 #include "serial_manipulator.h"
 
-#define K_VIS 60.0f
+#define K_VIS 65.0f
 
 #define M_1 9.30e-3f
 #define M_2 30.7e-3f
@@ -50,6 +50,7 @@
 #define IZ_2 189.073E-6f
 
 #define SERVO_ACC_MAX 60.0f
+#define SERVO_U_MAX 520.0f
 
 void servoControllerInit(const float updateDt);
 

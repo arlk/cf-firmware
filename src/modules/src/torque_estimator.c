@@ -162,8 +162,9 @@ void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, const
 	float avis;
 
 	avis = -K_VIS*servoStates->vel[servoNumber];
-	servoStates->acc[servoNumber] = avis + servoControllerUpdatePID(servoStates->pos[servoNumber], pwm2rad((float)targetAll[servoNumber]) );
-		//+ 0.0f*lagrangeDynamics(0.0f, servoStates, state, sensorData);
+	servoStates->acc[servoNumber] = avis +
+    servoAccSat( servoControllerUpdatePID(servoStates->pos[servoNumber], pwm2rad((float)targetAll[servoNumber])
+    + 0.0f*lagrangeDynamics(0.0f, servoStates, state, sensorData)), SERVO_U_MAX);
 	servoStates->acc[servoNumber] = servoAccSat(servoStates->acc[servoNumber],SERVO_ACC_MAX);
 	servoStates->vel[servoNumber] += servoStates->acc[servoNumber]*ts;
 	servoStates->pos[servoNumber] += servoStates->vel[servoNumber]*ts;
