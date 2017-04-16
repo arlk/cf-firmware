@@ -106,7 +106,7 @@
 
 #if defined(SERIAL_MANIP)
 
-#define PID_SERVO_KP  1500.0
+#define PID_SERVO_KP  1000.0
 #define PID_SERVO_KI  0.0
 #define PID_SERVO_KD  0.0
 #define PID_SERVO_INTEGRATION_LIMIT   1.0
