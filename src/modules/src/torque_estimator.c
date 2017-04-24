@@ -144,6 +144,7 @@ void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint){
     t1=pwm2rad(targetAll[0]);
     t2=pwm2rad(targetAll[1]);
     tq_get=pitchMoment;
+
     targetAll[3] = updateBatteryPosition(tq_get,t1,t2); 
 
     /*
