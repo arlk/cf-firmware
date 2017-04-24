@@ -41,6 +41,8 @@
 #include "controller.h"
 #include "power_distribution.h"
 
+#include "complementary_angacc_estimator.h"
+
 #ifdef ESTIMATOR_TYPE_kalman
 #include "estimator_kalman.h"
 #else
@@ -114,6 +116,7 @@ static void stabilizerTask(void* param)
     getExtPosition(&state);
 #ifdef ESTIMATOR_TYPE_kalman
     stateEstimatorUpdate(&state, &sensorData, &control);
+    complementaryAngAccEstimator(&state, &sensorData);
 #else
     sensorsAcquire(&sensorData, tick);
     stateEstimator(&state, &sensorData, tick);
@@ -140,7 +143,6 @@ LOG_GROUP_START(stabilizer)
 LOG_ADD(LOG_FLOAT, roll, &state.attitude.roll)
 LOG_ADD(LOG_FLOAT, pitch, &state.attitude.pitch)
 LOG_ADD(LOG_FLOAT, yaw, &state.attitude.yaw)
-LOG_ADD(LOG_UINT16, thrust, &control.thrust)
 LOG_GROUP_STOP(stabilizer)
 
 LOG_GROUP_START(acc)

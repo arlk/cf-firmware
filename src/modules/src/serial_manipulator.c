@@ -31,7 +31,6 @@
  *
  * serial_manipulator.c - servo motor controller for serial manipulator
  * */
-
 #include "t_battery_moving_torque.h"
 #include "serial_manipulator.h"
 #include "torque_estimator.h"
@@ -149,13 +148,13 @@ bool serialManipGetQueueCmd(void *command)
 	return (result==pdTRUE);
 }
 
-void servoController(int* targetAll, servoStates_t* servoStates, const state_t* state, setpoint_t* setpoint){
+void servoController(int* targetAll, servoStates_t* servoStates, const state_t* state, const sensorData_t* sensorData, setpoint_t* setpoint){
 
 	servoGetCmd(targetAll, state, setpoint);
 	serialManipEnqueueCmd(manipCmdQueue, (void *)targetAll);
 
-	servoEstUpdate(0.01f, 0, servoStates, targetAll);
-	servoEstUpdate(0.01f, 1, servoStates, targetAll);
+	servoEstUpdate(0.002f, 0, servoStates, state, sensorData, targetAll);
+	servoEstUpdate(0.002f, 1, servoStates, state, sensorData, targetAll);
 }
 
 static void manipulatorTask(void* param)
@@ -198,11 +197,10 @@ static void manipulatorTask(void* param)
 
     serialManipGetQueueCmd(targetAll);
 
-    maestro_set_target(12, 0, targetAll[0]);
+    maestro_set_target(12, 0, 12000-targetAll[0]);
     maestro_set_target(12, 1, targetAll[1]);
     maestro_set_target(12, 2, targetAll[2]);
     maestro_set_target(12, 3, targetAll[3]);
-
     //serialManipEnqueueCmd(manipCmdQueue, (void *)targetAll);
 
     tick++;

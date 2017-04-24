@@ -178,6 +178,7 @@ PROJ_OBJ += geometric_controller.o
 PROJ_OBJ += position_estimator_altitude.o position_controller_pid.o
 PROJ_OBJ += estimator_$(ESTIMATOR).o controller_$(CONTROLLER).o
 PROJ_OBJ += power_distribution_$(POWER_DISTRIBUTION).o
+PROJ_OBJ += complementary_angacc_estimator.o
 
 # Trajectory modules
 PROJ_OBJ += simple_trajectories.o
@@ -301,7 +302,7 @@ ifeq ($(DEBUG), 1)
   CFLAGS += -O0 -g3 -DDEBUG
 else
 	# Fail on warnings
-	CFLAGS += -Os -g3 -Werror
+	# CFLAGS += -Os -g3 -Werror
 endif
 
 ifeq ($(LTO), 1)

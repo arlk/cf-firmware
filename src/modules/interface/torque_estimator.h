@@ -40,16 +40,17 @@
 
 #define K_VIS 65.0f
 
-#define IZ_1 28.741e-7f
-#define IZ_2 189.073E-6f
 #define M_1 9.30e-3f
 #define M_2 30.7e-3f
 #define L_1 0.100f
-#define L_2 0.130f
+#define L_2 0.123f
 #define R_1 43.48e-3f
 #define R_2 67.77e-3f
+#define IZ_1 28.741e-7f
+#define IZ_2 189.073E-6f
 
-#define SERVO_ACC_MAX 50.0f
+#define SERVO_ACC_MAX 60.0f
+#define SERVO_U_MAX 520.0f
 
 void servoControllerInit(const float updateDt);
 
@@ -61,9 +62,9 @@ void servoControllerResetAllPID(void);
 
 void servoGetCmd(int* targetAll, const state_t* state, setpoint_t* setpoint);
 
-void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, int* targetAll);
+void servoEstUpdate(float ts, int servoNumber, servoStates_t* servoStates, const state_t* state, const sensorData_t* sensorData, int* targetAll);
 
-float lagrangeDynamics(float payloadMass, servoStates_t* servoStates);
+float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const state_t* state, const sensorData_t* sensorData);
 
 float pwm2rad(float target);
 

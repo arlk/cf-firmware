@@ -72,7 +72,7 @@ bool stateControllerTest(void)
 
 void stateController(control_t *control, setpoint_t *setpoint,
                                          const sensorData_t *sensors,
-                                         const state_t *state,
+                                         state_t *state,
                                          const uint32_t tick)
 {
   if (RATE_DO_EXECUTE(ATTITUDE_RATE, tick)) {
@@ -120,7 +120,7 @@ void stateController(control_t *control, setpoint_t *setpoint,
         actuatorThrust = setpoint->thrust;
     }
 
-    geometricMomentController(&state->rotation, sensors, setpoint, state);
+    geometricMomentController(state, sensors, setpoint);
 
     geometricControllerGetActuatorOutput(&control->roll,
                                          &control->pitch,

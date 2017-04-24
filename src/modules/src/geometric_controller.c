@@ -46,13 +46,21 @@
 #include "param.h"
 #include "log.h"
 #include "torque_estimator.h"
+#include "complementary_angacc_estimator.h"
+
 
 #ifdef SERIAL_MANIP
 
-static float manip_mom_gain = 30000.0f;
+static float payloadMass = 0.025f;
+static float mass = 0.028f + (0.028f/0.210f)*0.025f; // manually add payloadMass
+static float manip_mom_gain = 120000.0f;
 static float test_manip_rollMoment; // Nm
 static float test_manip_pitchMoment = 0.1f; // Nm
 static float test_manip_yawMoment; // Nm
+
+#else
+
+static float mass = 0.028f;
 
 #endif /* SERIAL_MANIP */
 
@@ -60,7 +68,6 @@ static float k_pos_xy = 0.85f;
 static float k_pos_z = 0.65f;
 static float k_vel_xy = 0.45f;
 static float k_vel_z = 0.25f;
-static float mass = 0.028f;
 static float thr_gain = 60000.0f;
 
 static float k_rot_xy = 1.0f;
@@ -78,7 +85,7 @@ static int16_t yawOutput;
 static float thrustOutput;
 
 static float rollMoment;
-float pitchMoment;//extern float pitchMoment;
+float pitchMoment;
 static float yawMoment;
 static float thrustForce;
 
@@ -119,7 +126,9 @@ void geometricControllerInit()
     //xQueueReset(vehicleStatesQueue);
     return;
 
-  //vehicleStatesQueue = xQueueCreate(VEH_STATES_QUEUE_LENGTH,sizeof(vehiclePitchStates));
+  complementaryHsInit(GEOMETRIC_UPDATE_DT);
+  servoControllerInit(GEOMETRIC_UPDATE_DT);
+    //vehicleStatesQueue = xQueueCreate(VEH_STATES_QUEUE_LENGTH,sizeof(vehiclePitchStates));
   isInit = true;
 }
 
@@ -303,21 +312,21 @@ void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpo
          + (k_pos_z*errPosition[2] + k_vel_z*errVelocity[2]
                 + mass*(GRAVITY + setpoint->acc.z))*state->rotation.vals[2][2];
 
-  #ifdef SERIAL_MANIP
+  //#ifdef SERIAL_MANIP
 
-  thrustOutput = thr_gain*setpoint->joy.throttle;
+  //thrustOutput = thr_gain*setpoint->joy.throttle;
 
-  #else
+  //#else
 
   thrustOutput = thr_gain*thrustForce;
 
-  #endif /* SERIAL_MANIP */
+  //#endif /* SERIAL_MANIP */
 }
 
-void geometricMomentController(const rotation_t* rotation,
-    const sensorData_t *sensors, setpoint_t* setpoint, const state_t* state)
+void geometricMomentController(state_t* state,
+    const sensorData_t* sensors, setpoint_t* setpoint)
 {
-  arm_matrix_instance_f32 Rwb = {3, 3, (float *)rotation->vals};
+  arm_matrix_instance_f32 Rwb = {3, 3, (float *)state->rotation.vals};
   arm_matrix_instance_f32 Rwd = {3, 3, (float *)setpoint->rotation.vals};
 
   static float rotationDesTransp[3][3];
@@ -403,25 +412,29 @@ void geometricMomentController(const rotation_t* rotation,
               /* - orientFeedFwd[2]; */
               - 0.0f*orientFeedFwd[2];
 
-  /*
-  vehiclePitchStates[0] = 0.0f; //pitch attitude
-  vehiclePitchStates[1] = 0.0f; //pitch rate
-  vehiclePitchStates[2] = 0.0f; //pitch acceleration
-  
-  vehicleEnqueuePitchStates(vehicleStatesQueue, (void *)vehiclePitchStates);
-  */
 
   #ifdef SERIAL_MANIP
-  servoStates_t servoStates;
+  static servoStates_t servoStates;
   int targetAll[3];
 
-  servoController(targetAll, &servoStates, state, setpoint);
+  servoController(targetAll, &servoStates, state, sensors, setpoint);
 
-  rollOutput  = saturateSignedInt16(/*mom_gain*rollMoment +*/ manip_mom_gain*test_manip_rollMoment);
-  //pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*test_manip_pitchMoment);
-  pitchOutput = saturateSignedInt16( mom_gain*pitchMoment + manip_mom_gain*lagrangeDynamics(0.0f, &servoStates));
-  //pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
-  yawOutput   = saturateSignedInt16(/*mom_gain*yawMoment +*/ manip_mom_gain*test_manip_yawMoment);
+  if ((float)setpoint->joy.trigger > 0.5f)
+    {
+      // coad
+      rollOutput  = saturateSignedInt16(mom_gain*rollMoment /*+ manip_mom_gain*test_manip_rollMoment*/);
+      //pitchOutput = saturateSignedInt16(/*mom_gain*pitchMoment +*/ manip_mom_gain*test_manip_pitchMoment);
+      pitchOutput = saturateSignedInt16( mom_gain*pitchMoment - manip_mom_gain*lagrangeDynamics(payloadMass, &servoStates, state, sensors));
+      //pitchOutput = saturateSignedInt16( mom_gain*pitchMoment + 5.0f);
+      //pitchOutput = saturateSignedInt16( (setpoint->joy.throttle*60000.0f) *0.1f ); // TEST: 0.1 Nm desired output
+      yawOutput   = saturateSignedInt16(mom_gain*yawMoment /*+ manip_mom_gain*test_manip_yawMoment*/);
+    }
+    else
+    {
+      rollOutput  = saturateSignedInt16(mom_gain*rollMoment);
+      pitchOutput = saturateSignedInt16(mom_gain*pitchMoment);
+      yawOutput   = saturateSignedInt16(mom_gain*yawMoment);
+    }
 
   #else
 
@@ -471,8 +484,8 @@ PARAM_ADD(PARAM_FLOAT, thrust_gain, &thr_gain)
 PARAM_ADD(PARAM_FLOAT, mass, &mass)
 PARAM_GROUP_STOP(geomThrust)
 
-#ifdef SERIAL_MANIP
 
+#ifdef SERIAL_MANIP
 PARAM_GROUP_START(feedforward)
 PARAM_ADD(PARAM_FLOAT, manip_gain, &manip_mom_gain)
 PARAM_ADD(PARAM_FLOAT, manip_roll, &test_manip_rollMoment)
