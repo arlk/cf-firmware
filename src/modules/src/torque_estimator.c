@@ -217,11 +217,11 @@ float lagrangeDynamics(float payloadMass, servoStates_t* servoStates, const stat
 	beta = m_2_new*L_1*r_2_new;
 	delta = iz_2_new + m_2_new*powf(r_2_new,2.0f);
 
-	moment1 = -1.0f*(  (alpha + 2.0f*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot
+	moment1 = -0.0f*(  (alpha + 2.0f*beta*c2)*theta1DDot + (delta + beta*c2)*theta2DDot + (-beta*s2*theta2Dot)*theta1Dot
 					+ (-beta*s2*(theta1Dot + theta2Dot))*theta2Dot  ) // Dynamic Torque
           + (-GRAVITY*c1*(M_1*R_1 + m_2_new*L_1) + m_2_new*(-GRAVITY)*r_2_new*c12); // Static Torque
 
-	moment2 = -1.0f*(  (delta + beta*c2)*theta1DDot + delta*theta2DDot + (beta*s2*theta1Dot)*theta1Dot  );
+	moment2 = -0.0f*(  (delta + beta*c2)*theta1DDot + delta*theta2DDot + (beta*s2*theta1Dot)*theta1Dot  );
 
   return moment1 + moment2;  /// Total manipulator moment ///
 
