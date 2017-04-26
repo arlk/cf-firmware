@@ -171,8 +171,8 @@ typedef const struct {
 } Melody;
 
 static uint32_t neffect = 0;
-static uint32_t sys_effect = 0;
-static uint32_t user_effect = 0;
+static uint32_t sys_effect = 2;
+static uint32_t user_effect = 2;
 
 static Melody range_slow = {.bpm = 120, .delay = 1, .notes = {{C4, H}, {D4, H}, {E4, H}, {F4, H}, {G4, H}, {A4, H}, {B4, H}, REPEAT}};
 static Melody range_fast = {.bpm = 120, .delay = 1, .notes = {{C4, S}, {D4, S}, {E4, S}, {F4, S}, {G4, S}, {A4, S}, {B4, S}, REPEAT}};
@@ -183,6 +183,7 @@ static Melody lowbatt = {.bpm = 120, .delay = 1, .notes = {{D4, E}, {A4, E}, {D4
 static Melody usb_disconnect = {.bpm = 120, .delay = 1, .notes = {{C4, E}, STOP}};
 static Melody usb_connect = {.bpm = 120, .delay = 1, .notes = {{A4, E}, STOP}};
 static Melody factory_test = {.bpm = 120, .delay = 1, .notes = {{A1, Q}, {OFF, S}, {A2, Q}, {OFF, S}, REPEAT}};
+
 static Melody starwars = {.bpm = 120, .delay = 1, .notes = {{A3, Q}, {A3, Q}, {A3, Q}, {F3, ES}, {C4, S},
     {A3, Q}, {F3, ES}, {C4, S}, {A3, H},
     {E4, Q}, {E4, Q}, {E4, Q}, {F4, ES}, {C4, S},
@@ -198,6 +199,11 @@ static Melody starwars = {.bpm = 120, .delay = 1, .notes = {{A3, Q}, {A3, Q}, {A
     {A3, Q}, {F3, ES}, {C4, S}, {A3, H}, {0, H},
     REPEAT}};
 static Melody valkyries = {.bpm = 140, .delay = 1, .notes = {{Gb3, Q}, {B3, Q},
+    {Gb3, S}, {B3, E},  {D4, Q}, {B3, Q}, {D4, Q}, {B3, S}, {D4, E}, {Gb4, Q},  
+    {D4, Q}, {Gb4, Q}, {D4, S}, {Gb4, E}, {A4, Q}, {A3, Q}, {D4, Q}, {A3, S},  
+    {D4, E}, {Gb4, H}, 
+    REPEAT}};
+static Melody pirates = {.bpm = 140, .delay = 1, .notes = {{Gb3, Q}, {B3, Q},
     {Gb3, S}, {B3, E},  {D4, Q}, {B3, Q}, {D4, Q}, {B3, S}, {D4, E}, {Gb4, Q},  
     {D4, Q}, {Gb4, Q}, {D4, S}, {Gb4, E}, {A4, Q}, {A3, Q}, {D4, Q}, {A3, S},  
     {D4, E}, {Gb4, H}, 
