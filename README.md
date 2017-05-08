@@ -116,6 +116,29 @@ or with the toolbelt
 tb make
 ```
 
+### Q2 Platform
+
+Build with:
+
+```bash
+make VEH=q2
+```
+
+### Q2 Aerial Manipulator
+
+Build with Q2 platform with the addition of either serial manipulator:
+
+```bash
+make VEH=q2 MANIP=serial
+```
+
+or parallel manipulator:
+
+```bash
+make VEH=q2 MANIP=delta
+```
+
+
 ### config.mk
 To create custom build options create a file called config.mk in the root folder
 (same as Makefile) and fill it with options. E.g.
