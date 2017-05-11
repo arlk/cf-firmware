@@ -51,6 +51,7 @@ struct traj{
     float Cx[10];
     float Cy[10];
     float Cz[10];
+    float Cphi[10];
     int n;
     float total_time;
     uint32_t led_state;
