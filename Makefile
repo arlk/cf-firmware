@@ -210,6 +210,7 @@ PROJ_OBJ_CF2 += cppmdeck.o
 PROJ_OBJ_CF2 += usddeck.o
 PROJ_OBJ_CF2 += vl53l0x.o
 PROJ_OBJ_CF2 += locodeck.o
+PROJ_OBJ_CF2 += raspi2c.o
 ifeq ($(LPS_TDMA_ENABLE), 1)
 PROJ_OBJ_CF2 += lpsTwrTdmaTag.o
 else
