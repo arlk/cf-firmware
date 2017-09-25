@@ -46,7 +46,7 @@ static float circRad = 0.8f;
 static float circFreq = 0.2f;
 static float circAlt = 2.0f;
 /* static float opt_time_stretch = 8.2766; */
-static float opt_time_stretch = 12.5f;
+static float opt_time_stretch = 0.75f*25.0f;
 
 static float nchosk[5][11] = {{1,6,15,20,15,6,1,0,0,0},{1,7,21,35,35,21,7,1,0,0},{1,8,28,56,70,56,28,8,1,0},{1,9,36,84,126,126,84,36,9,1}};
 
@@ -328,27 +328,27 @@ void initBezierTraj(void)
 
   for (int i = 0; i <= P1.n; i++) {
 		  P1.Cx[i] = Cx1[i];
-		  P1.Cy[i] = Cy1[i];
+		  P1.Cy[i] = 0.75*Cy1[i];
 		  P1.Cz[i] = Cz1[i];
 	  }
   for (int i = 0; i <= P1.n; i++) {
       P2.Cx[i] = Cx2[i];
-      P2.Cy[i] = Cy2[i];
+      P2.Cy[i] = 0.75*Cy2[i];
       P2.Cz[i] = Cz2[i];
     }
   for (int i = 0; i <= P1.n; i++) {
       P3.Cx[i] = Cx3[i];
-      P3.Cy[i] = Cy3[i];
+      P3.Cy[i] = 0.75*Cy3[i];
       P3.Cz[i] = Cz3[i];
     }
   for (int i = 0; i <= P1.n; i++) {
       P4.Cx[i] = Cx4[i];
-      P4.Cy[i] = Cy4[i];
+      P4.Cy[i] = 0.75*Cy4[i];
       P4.Cz[i] = Cz4[i];
     }
   for (int i = 0; i <= P1.n; i++) {
       P5.Cx[i] = Cx5[i];
-      P5.Cy[i] = Cy5[i];
+      P5.Cy[i] = 0.75*Cy5[i];
       P5.Cz[i] = Cz5[i];
     }
 
