@@ -60,7 +60,8 @@ typedef void (*packetDecoder_t)(setpoint_t *setpoint, uint8_t type, const void *
 enum packet_type {
   stopType          = 0,
   velocityWorldType = 1,
-  joyPassType = 2
+  joyPassType = 2,
+  referenceType = 3
 };
 
 /* ---===== 2 - Decoding functions =====--- */
@@ -129,12 +130,55 @@ static void joyDecoder(setpoint_t *setpoint, uint8_t type, const void *data, siz
 }
 
 
+/* referenceDecoder
+ * Set the Crazyflie velocity in the world coordinate system
+ */
+struct referencePacket_s {
+  uint8_t derivative;
+
+  float x;
+  float y;
+  float z;
+  float phi;
+} __attribute__((packed));
+static void referenceDecoder(setpoint_t *setpoint, uint8_t type, const void *data, size_t datalen)
+{
+  const struct referencePacket_s *values = data;
+
+  ASSERT(datalen == sizeof(struct referencePacket_s));
+
+  if (values->derivative == 0) {
+    setpoint->position.x = values->x;
+    setpoint->position.y = values->y;
+    setpoint->position.z = values->z;
+    setpoint->attitude.yaw = values->phi;
+  } else if (values->derivative == 1) {
+    setpoint->velocity.x = values->x;
+    setpoint->velocity.y = values->y;
+    setpoint->velocity.z = values->z;
+    setpoint->attitudeRate.yaw = values->phi;
+  } else if (values->derivative == 2) {
+    setpoint->acc.x = values->x;
+    setpoint->acc.y = values->y;
+    setpoint->acc.z = values->z;
+    setpoint->attitudeAcc.yaw = values->phi;
+  } else if (values->derivative == 3) {
+    setpoint->jerk.x = values->x;
+    setpoint->jerk.y = values->y;
+    setpoint->jerk.z = values->z;
+  } else if (values->derivative == 4) {
+    setpoint->snap.x = values->x;
+    setpoint->snap.y = values->y;
+    setpoint->snap.z = values->z;
+  }
+}
 
  /* ---===== 3 - packetDecoders array =====--- */
 const static packetDecoder_t packetDecoders[] = {
   [stopType]          = stopDecoder,
   [velocityWorldType] = velocityDecoder,
-  [joyPassType] = joyDecoder
+  [joyPassType] = joyDecoder,
+  [referenceType] = referenceDecoder
 };
 
 /* Decoder switch */

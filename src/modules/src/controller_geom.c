@@ -109,6 +109,10 @@ void stateController(control_t *control, setpoint_t *setpoint,
 
       case genericTraj:
         /* Generic Trajectories */
+        geometricControllerGetAttitudeDesired(state, setpoint);
+        geometricControllerGetOmegaDesired(setpoint);
+        geometricControllerGetThrustDesired(state, setpoint);
+        geometricControllerGetThrustOutput(&actuatorThrust);
         break;
 
       default:
