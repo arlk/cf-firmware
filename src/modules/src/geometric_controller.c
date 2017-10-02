@@ -44,6 +44,11 @@
 #include "param.h"
 #include "log.h"
 
+static float k_posi_xy = 0.01f;
+static float k_posi_z = 0.01f;
+static float k_roti_xy = 0.01f;
+static float k_roti_z = 0.01f;
+
 static float k_pos_xy = 0.85f;
 static float k_pos_z = 0.65f;
 static float k_vel_xy = 0.45f;
@@ -73,6 +78,9 @@ static float thrustForce;
 static float errPosition[3];
 static float errVelocity[3];
 
+static float errIPosition[3];
+static float errIRotation[3];
+
 static bool isInit;
 
 static inline void mat_trans(const arm_matrix_instance_f32 * pSrc, arm_matrix_instance_f32 * pDst)
@@ -96,12 +104,32 @@ static inline int16_t saturateSignedInt16(float in)
     return (int16_t)in;
 }
 
+static inline float saturate(float in, float max)
+{
+  if (in > max)
+    return max;
+  else if (in < -max)
+    return -max;
+  else
+    return in;
+}
+
 void geometricControllerInit()
 {
   if(isInit)
     return;
 
   isInit = true;
+}
+
+void geometricControllerReset()
+{
+  errIPosition[0] = 0.0f;
+  errIPosition[1] = 0.0f;
+  errIPosition[2] = 0.0f;
+  errIRotation[0] = 0.0f;
+  errIRotation[1] = 0.0f;
+  errIRotation[2] = 0.0f;
 }
 
 bool geometricControllerTest()
@@ -212,12 +240,17 @@ void geometricControllerGetAttitudeDesired(const state_t* state,
   errVelocity[1] = setpoint->velocity.y - state->velocity.y;
   errVelocity[2] = setpoint->velocity.z - state->velocity.z;
 
+  //// FIXME: HACCCCCCK! (arun)
+  errIPosition[0] += errPosition[0]*0.002f;
+  errIPosition[1] += errPosition[1]*0.002f;
+  errIPosition[2] += errPosition[2]*0.002f;
+
   setpoint->rotation.vals[0][2] = k_pos_xy*errPosition[0] + k_vel_xy*errVelocity[0]
-      + mass*setpoint->acc.x;
+      +k_posi_xy*errIPosition[0] + mass*setpoint->acc.x;
   setpoint->rotation.vals[1][2] = k_pos_xy*errPosition[1] + k_vel_xy*errVelocity[1]
-      + mass*setpoint->acc.y;
+      +k_posi_xy*errIPosition[1] + mass*setpoint->acc.y;
   setpoint->rotation.vals[2][2] = k_pos_z*errPosition[2] + k_vel_z*errVelocity[2]
-      + mass*(GRAVITY + setpoint->acc.z);
+      +k_posi_z*errIPosition[2] + mass*(GRAVITY + setpoint->acc.z);
 
   static float invForceMagnitude = 0;
   invForceMagnitude = invSqrt(
@@ -251,11 +284,12 @@ void geometricControllerGetAttitudeDesired(const state_t* state,
 
 void geometricControllerGetThrustDesired(const state_t* state, setpoint_t* setpoint)
 {
-  thrustForce = (k_pos_xy*errPosition[0] + k_vel_xy*errVelocity[0]
+  thrustForce = (k_pos_xy*errPosition[0] + k_vel_xy*errVelocity[0] + k_posi_xy*errIPosition[0]
                 + mass*setpoint->acc.x)*state->rotation.vals[0][2]
-         + (k_pos_xy*errPosition[1] + k_vel_xy*errVelocity[1]
+         + (k_pos_xy*errPosition[1] + k_vel_xy*errVelocity[1] + k_posi_xy*errIPosition[1]
                 + mass*setpoint->acc.y)*state->rotation.vals[1][2]
-         + (k_pos_z*errPosition[2] + k_vel_z*errVelocity[2]
+         + (k_pos_z*errPosition[2] + k_vel_z*errVelocity[2]+ k_posi_z*errIPosition[2]
+
                 + mass*(GRAVITY + setpoint->acc.z))*state->rotation.vals[2][2];
 
   thrustOutput = thr_gain*thrustForce;
@@ -286,6 +320,10 @@ void geometricMomentController(const rotation_t* rotation,
 
   static float errRotation[3];
   vee_map(eR.pData, errRotation);
+
+  errIRotation[0] += errRotation[0]*0.002f;
+  errIRotation[1] += errRotation[1]*0.002f;
+  errIRotation[2] += errRotation[2]*0.002f;
 
   static float errOmega[3];
   errOmega[0] = sensors->gyro.x*DEG_TO_RAD
@@ -337,15 +375,15 @@ void geometricMomentController(const rotation_t* rotation,
     - desOrientationTransp[2][1]*setpoint->attitudeAcc.pitch
     - desOrientationTransp[2][2]*setpoint->attitudeAcc.yaw);
 
-  rollMoment  = (-k_rot_xy*0.5f*errRotation[0] -k_omg_xy*errOmega[0])
+  rollMoment  = (-k_rot_xy*0.5f*errRotation[0] -k_omg_xy*errOmega[0] -k_roti_xy*errIRotation[0])
               + (-j_yy + j_zz)*sensors->gyro.y*sensors->gyro.z
               /* - orientFeedFwd[0]; */
               - 0.0f*orientFeedFwd[0];
-  pitchMoment = -(-k_rot_xy*0.5f*errRotation[1] -k_omg_xy*errOmega[1])
+  pitchMoment = -(-k_rot_xy*0.5f*errRotation[1] -k_omg_xy*errOmega[1] -k_roti_xy*errIRotation[1])
               + (j_xx - j_zz)*sensors->gyro.x*sensors->gyro.z
               /* - orientFeedFwd[1]; */
               - 0.0f*orientFeedFwd[1];
-  yawMoment   = (-k_rot_z*0.5f*errRotation[2] -k_omg_z*errOmega[2])
+  yawMoment   = (-k_rot_z*0.5f*errRotation[2] -k_omg_z*errOmega[2] -k_roti_z*errIRotation[2])
               + (-j_xx + j_yy)*sensors->gyro.x*sensors->gyro.y
               /* - orientFeedFwd[2]; */
               - 0.0f*orientFeedFwd[2];
@@ -377,6 +415,8 @@ LOG_GROUP_STOP(geomOut)
 PARAM_GROUP_START(geomMoment)
 PARAM_ADD(PARAM_FLOAT, kr_xy, &k_rot_xy)
 PARAM_ADD(PARAM_FLOAT, kr_z, &k_rot_z)
+PARAM_ADD(PARAM_FLOAT, kri_xy, &k_roti_xy)
+PARAM_ADD(PARAM_FLOAT, kri_z, &k_roti_z)
 PARAM_ADD(PARAM_FLOAT, ko_xy, &k_omg_xy)
 PARAM_ADD(PARAM_FLOAT, ko_z, &k_omg_z)
 PARAM_ADD(PARAM_FLOAT, jxx, &j_xx)
@@ -388,6 +428,8 @@ PARAM_GROUP_STOP(geomMoment)
 PARAM_GROUP_START(geomThrust)
 PARAM_ADD(PARAM_FLOAT, kp_xy, &k_pos_xy)
 PARAM_ADD(PARAM_FLOAT, kp_z, &k_pos_z)
+PARAM_ADD(PARAM_FLOAT, kpi_xy, &k_posi_xy)
+PARAM_ADD(PARAM_FLOAT, kpi_z, &k_posi_z)
 PARAM_ADD(PARAM_FLOAT, kv_xy, &k_vel_xy)
 PARAM_ADD(PARAM_FLOAT, kv_z, &k_vel_z)
 PARAM_ADD(PARAM_FLOAT, thrust_gain, &thr_gain)
