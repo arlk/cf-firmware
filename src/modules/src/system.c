@@ -64,6 +64,7 @@
 #include "serial_manipulator.h"
 #elif DELTA_MANIP
 #include "delta_manipulator.h"
+#include "neopixelring.h"
 #endif
 
 #ifdef PLATFORM_CF1
@@ -129,6 +130,7 @@ void systemInit(void)
   ledseqInit();
   pmInit();
   buzzerInit();
+  neopixelringInit();
 
   isInit = true;
 }
